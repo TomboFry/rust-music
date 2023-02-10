@@ -23,7 +23,8 @@ impl SystemState {
 impl eframe::App for SystemState {
 	fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 		draw_application_menu(ctx);
-		egui::TopBottomPanel::top("windows").show(ctx, |ui| self.windows.checkboxes(ui));
+		egui::TopBottomPanel::top("windows")
+			.show(ctx, |ui| ui.horizontal(|ui| self.windows.checkboxes(ui)));
 
 		self.windows.windows(ctx);
 	}
