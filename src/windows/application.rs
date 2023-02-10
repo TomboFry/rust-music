@@ -85,6 +85,8 @@ pub struct SystemState {
 
 impl SystemState {
 	pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+		setup_custom_fonts(&cc.egui_ctx);
+
 		Self {
 			project: Project::new(PROJECT_DEFAULT_NAME),
 			windows: Windows::default(),
