@@ -1,0 +1,15 @@
+[package]
+name = "tombo-music"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "tombo-music"
+path = "src/main.rs"
+
+[dependencies]
+eframe = "0.21.0"
+egui = "0.21.0"
+im = "15.1.0"
