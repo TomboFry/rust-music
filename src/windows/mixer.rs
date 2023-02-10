@@ -7,6 +7,29 @@ use egui::{Context, TopBottomPanel, Ui};
 
 pub struct Mixer {
 	pub channels: Vec<Channel>,
+	pub remove_queue: Vec<usize>,
+}
+
+impl Mixer {
+	pub fn add_channel(&mut self) {
+		let len = self.channels.len();
+		let name = format!("{} {}", CHANNEL_DEFAULT_NAME, len + 1);
+		let channel = Channel::new(Some(&name));
+
+		self.channels.push(channel);
+	}
+
+	pub fn clean_channels(&mut self) {
+		if self.remove_queue.len() == 0 {
+			return;
+		}
+
+		self.remove_queue.iter().for_each(|idx| {
+			self.channels.remove(*idx);
+		});
+
+		self.remove_queue.clear();
+	}
 }
 
 impl Default for Mixer {
@@ -17,6 +40,7 @@ impl Default for Mixer {
 				Channel::new(Some("Channel 1")),
 				Channel::new(Some("Channel 2")),
 			],
+			remove_queue: Vec::with_capacity(1),
 		}
 	}
 }
@@ -41,16 +65,17 @@ impl View for Mixer {
 	fn ui(&mut self, ui: &mut Ui) {
 		TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button("New Channel").clicked() {
-				let len = self.channels.len();
-				let name = format!("{} {}", CHANNEL_DEFAULT_NAME, len);
-				let channel = Channel::new(Some(&name));
-
-				self.channels.push(channel);
+				self.add_channel();
 			}
 		});
 
 		ui.horizontal(|ui| {
-			self.channels.iter_mut().for_each(|c| c.view(ui));
+			self.channels
+				.iter_mut()
+				.enumerate()
+				.for_each(|(idx, c)| c.view(ui, idx, &mut self.remove_queue));
 		});
+
+		self.clean_channels();
 	}
 }

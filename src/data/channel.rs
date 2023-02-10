@@ -19,7 +19,7 @@ impl Channel {
 		}
 	}
 
-	pub fn view(&mut self, ui: &mut Ui) {
+	pub fn view(&mut self, ui: &mut Ui, index: usize, remove_queue: &mut Vec<usize>) {
 		ui.vertical(|ui| {
 			ui.add(
 				TextEdit::singleline(&mut self.name)
@@ -40,6 +40,12 @@ impl Channel {
 			});
 
 			ui.toggle_value(&mut self.muted, "Muted");
+
+			if index > 0 {
+				if ui.button("❌").clicked() {
+					remove_queue.push(index);
+				}
+			}
 		});
 	}
 }
