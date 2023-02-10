@@ -4,6 +4,7 @@ use resources::strings::WINDOW_TITLE;
 
 use crate::windows::application::SystemState;
 
+mod data;
 mod resources;
 mod windows;
 

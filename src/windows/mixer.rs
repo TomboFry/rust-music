@@ -46,6 +46,18 @@ pub struct Mixer {
 	pub channels: Vec<Channel>,
 }
 
+impl Default for Mixer {
+	fn default() -> Self {
+		Self {
+			channels: vec![
+				Channel::new(Some("Master")),
+				Channel::new(Some("Channel 1")),
+				Channel::new(Some("Channel 2")),
+			],
+		}
+	}
+}
+
 impl Window for Mixer {
 	fn name(&self) -> &'static str {
 		"Mixer"
