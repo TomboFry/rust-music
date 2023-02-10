@@ -1,10 +1,11 @@
-use self::mixer::Mixer;
+use self::{mixer::Mixer, sampler::Sampler};
 use egui::{Context, Ui};
 use std::collections::BTreeSet;
 
 pub mod application;
 pub mod menu;
 pub mod mixer;
+pub mod sampler;
 
 pub trait Window {
 	/// `&'static` so we can also use it as a key to store open/close state.
@@ -25,7 +26,10 @@ pub struct Windows {
 
 impl Default for Windows {
 	fn default() -> Self {
-		Self::new(vec![Box::new(Mixer::default())])
+		Self::new(vec![
+			Box::new(Mixer::default()),
+			Box::new(Sampler::default()),
+		])
 	}
 }
 
