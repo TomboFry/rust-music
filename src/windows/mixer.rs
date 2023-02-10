@@ -2,7 +2,7 @@ use crate::{
 	resources::strings::CHANNEL_DEFAULT_NAME,
 	windows::{View, Window},
 };
-use egui::{Slider, TextEdit, Ui};
+use egui::{Slider, TextEdit, Ui, Vec2};
 
 pub struct Channel {
 	pub volume: f64,
@@ -23,7 +23,11 @@ impl Channel {
 
 	pub fn view(&mut self, ui: &mut Ui) {
 		ui.vertical(|ui| {
-			ui.add(TextEdit::singleline(&mut self.name).desired_width(96.0));
+			ui.add(
+				TextEdit::singleline(&mut self.name)
+					.desired_width(96.0)
+					.min_size(Vec2::new(96.0, 16.0)),
+			);
 
 			ui.add(Slider::new(&mut self.panning, -1.0..=1.0).show_value(false))
 				.on_hover_text_at_pointer(format!("{:.0}%", self.panning * 100.0));
@@ -78,7 +82,11 @@ impl View for Mixer {
 	fn ui(&mut self, ui: &mut egui::Ui) {
 		egui::TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button("New Channel").clicked() {
-				self.channels.push(Channel::new(None));
+				let len = self.channels.len();
+				let name = format!("{} {}", CHANNEL_DEFAULT_NAME, len);
+				let channel = Channel::new(Some(&name));
+
+				self.channels.push(channel);
 			}
 		});
 
