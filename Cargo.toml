@@ -14,3 +14,5 @@ eframe = "0.21.0"
 egui = "0.21.0"
 im = "15.1.0"
 rfd = "0.11.0"
+egui_extras_xt = { git = "https://github.com/xTibor/egui_extras_xt", version = "0.1.0", features = ["knobs", "displays"] }
+# egui_extras_xt = { path = "../egui_extras_xt/egui_extras_xt", version="0.1.0", features = ["knobs", "displays"] }
