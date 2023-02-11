@@ -1,4 +1,4 @@
-use self::{mixer::Mixer, sampler::Sampler};
+use self::{mixer::Mixer, sampler::Sampler, settings::Settings};
 use crate::resources::strings;
 use egui::Context;
 use std::{
@@ -10,6 +10,7 @@ pub mod application;
 pub mod menu;
 pub mod mixer;
 pub mod sampler;
+pub mod settings;
 
 pub trait Window {
 	/// Show windows, etc
@@ -31,6 +32,7 @@ impl Default for Windows {
 		let mut windows: BTreeMap<&'static str, Box<dyn Window>> = BTreeMap::new();
 		windows.insert("Mixer", Box::new(Mixer::default()));
 		windows.insert("Sampler", Box::new(Sampler::default()));
+		windows.insert("Settings", Box::new(Settings::default()));
 
 		Self::new(windows)
 	}
