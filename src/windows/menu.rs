@@ -1,9 +1,31 @@
+use super::application::SystemState;
 use egui::{Context, Modifiers, Ui};
 
-pub fn draw_application_menu(ctx: &Context) {
-	egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
+pub fn draw_application_menu(ctx: &Context, state: &mut SystemState) {
+	egui::TopBottomPanel::top("application-menu-bar").show(ctx, |ui| {
 		egui::menu::bar(ui, |ui| {
 			file_menu_button(ui);
+			ui.separator();
+
+			ui.label("Tempo:");
+			ui.add(
+				egui::DragValue::new(&mut state.project.tempo)
+					.clamp_range(40.0..=320.0)
+					.suffix(" bpm"),
+			);
+
+			ui.separator();
+
+			ui.label("Time Signature:");
+			ui.add(
+				egui::DragValue::new(&mut state.project.time_signature_numerator)
+					.clamp_range(2..=16),
+			);
+			ui.label("/");
+			ui.add(
+				egui::DragValue::new(&mut state.project.time_signature_denominator)
+					.clamp_range(2..=16),
+			);
 		});
 	});
 }
