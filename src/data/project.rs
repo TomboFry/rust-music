@@ -1,10 +1,20 @@
+use std::time::Duration;
+
 use crate::resources::strings;
+
+pub enum PlayState {
+	Stopped,
+	Paused,
+	Playing,
+}
 
 pub struct Project {
 	pub name: String,
 	pub tempo: f64,
 	pub time_signature_numerator: usize,
 	pub time_signature_denominator: usize,
+	pub song_position: Duration,
+	pub play_state: PlayState,
 }
 
 impl Project {
@@ -14,6 +24,8 @@ impl Project {
 			tempo,
 			time_signature_numerator: 4,
 			time_signature_denominator: 4,
+			song_position: Duration::ZERO,
+			play_state: PlayState::Stopped,
 		}
 	}
 }

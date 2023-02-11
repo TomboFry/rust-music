@@ -5,6 +5,7 @@ use resources::strings;
 
 mod data;
 mod resources;
+mod utilities;
 mod windows;
 
 pub fn main() -> Result<(), eframe::Error> {
