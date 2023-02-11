@@ -27,19 +27,14 @@ impl Default for Sampler {
 }
 
 impl Window for Sampler {
-	fn name(&self) -> &'static str {
-		"Sampler"
-	}
-	fn show(&mut self, ctx: &egui::Context, open: &mut bool) {
-		egui::Window::new(self.name())
+	fn show(&mut self, ctx: &egui::Context, name: &'static str, open: &mut bool) {
+		egui::Window::new(name)
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)
 			.show(ctx, |ui| self.ui(ui));
 	}
-}
 
-impl View for Sampler {
 	fn ui(&mut self, ui: &mut egui::Ui) {
 		if ui.button("Add Audio").clicked() {
 			let files = rfd::FileDialog::new()
@@ -68,5 +63,9 @@ impl View for Sampler {
 			self.files.remove(*idx);
 		});
 		self.files_to_remove.clear();
+	}
+
+	fn as_any(&mut self) -> &mut dyn std::any::Any {
+		self
 	}
 }

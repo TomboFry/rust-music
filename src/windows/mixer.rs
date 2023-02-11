@@ -46,12 +46,8 @@ impl Default for Mixer {
 }
 
 impl Window for Mixer {
-	fn name(&self) -> &'static str {
-		"Mixer"
-	}
-
-	fn show(&mut self, ctx: &Context, open: &mut bool) {
-		egui::Window::new(self.name())
+	fn show(&mut self, ctx: &egui::Context, name: &'static str, open: &mut bool) {
+		egui::Window::new(name)
 			.open(open)
 			.resizable(true)
 			.collapsible(false)
@@ -59,9 +55,7 @@ impl Window for Mixer {
 			.hscroll(true)
 			.show(ctx, |ui| self.ui(ui));
 	}
-}
 
-impl View for Mixer {
 	fn ui(&mut self, ui: &mut Ui) {
 		TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button("New Channel").clicked() {
@@ -77,5 +71,9 @@ impl View for Mixer {
 		});
 
 		self.clean_channels();
+	}
+
+	fn as_any(&mut self) -> &mut dyn std::any::Any {
+		self
 	}
 }

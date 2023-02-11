@@ -8,15 +8,13 @@ pub mod mixer;
 pub mod sampler;
 
 pub trait Window {
-	/// `&'static` so we can also use it as a key to store open/close state.
-	fn name(&self) -> &'static str;
-
 	/// Show windows, etc
-	fn show(&mut self, ctx: &egui::Context, open: &mut bool);
-}
+	fn show(&mut self, ctx: &egui::Context, name: &'static str, open: &mut bool);
 
-pub trait View {
+	/// Display GUI inside window
 	fn ui(&mut self, ui: &mut egui::Ui);
+
+	fn as_any(&mut self) -> &mut dyn Any;
 }
 
 pub struct Windows {
