@@ -1,4 +1,4 @@
-use crate::resources::strings::PROJECT_DEFAULT_NAME;
+use crate::resources::strings;
 
 pub struct Project {
 	pub name: String,
@@ -20,6 +20,6 @@ impl Project {
 
 impl Default for Project {
 	fn default() -> Self {
-		Self::new(PROJECT_DEFAULT_NAME, 140.0)
+		Self::new(strings::PROJECT_DEFAULT_NAME, 140.0)
 	}
 }

@@ -1,9 +1,5 @@
-use crate::{
-	data::channel::Channel,
-	resources::strings::CHANNEL_DEFAULT_NAME,
-	windows::{View, Window},
-};
-use egui::{Context, TopBottomPanel, Ui};
+use crate::{data::channel::Channel, resources::strings, windows::Window};
+use egui::{TopBottomPanel, Ui};
 
 pub struct Mixer {
 	pub channels: Vec<Channel>,
@@ -13,7 +9,7 @@ pub struct Mixer {
 impl Mixer {
 	pub fn add_channel(&mut self) {
 		let len = self.channels.len();
-		let name = format!("{} {}", CHANNEL_DEFAULT_NAME, len + 1);
+		let name = format!("{} {}", strings::CHANNEL_DEFAULT_NAME, len + 1);
 		let channel = Channel::new(Some(&name));
 
 		self.channels.push(channel);
@@ -52,22 +48,23 @@ impl Window for Mixer {
 			.resizable(true)
 			.collapsible(false)
 			.default_width(640.0)
-			.hscroll(true)
 			.show(ctx, |ui| self.ui(ui));
 	}
 
 	fn ui(&mut self, ui: &mut Ui) {
 		TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
-			if ui.button("New Channel").clicked() {
+			if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
 				self.add_channel();
 			}
 		});
 
-		ui.horizontal(|ui| {
-			self.channels
-				.iter_mut()
-				.enumerate()
-				.for_each(|(idx, c)| c.view(ui, idx, &mut self.remove_queue));
+		egui::ScrollArea::horizontal().show(ui, |ui| {
+			ui.horizontal(|ui| {
+				self.channels
+					.iter_mut()
+					.enumerate()
+					.for_each(|(idx, c)| c.view(ui, idx, &mut self.remove_queue));
+			});
 		});
 
 		self.clean_channels();
