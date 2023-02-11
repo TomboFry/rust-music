@@ -1,19 +1,35 @@
-use crate::{
-	data::audio_file::AudioFile,
-	windows::{View, Window},
-};
-use std::path::PathBuf;
+use crate::{data::audio_file::AudioFile, resources::strings, windows::Window};
 
 pub struct Sampler {
 	files: Vec<AudioFile>,
-	files_to_remove: Vec<usize>,
+	remove_queue: Vec<usize>,
 }
 
 impl Sampler {
-	pub fn add_samples(&mut self, paths: Vec<PathBuf>) {
-		paths
+	pub fn add_samples(&mut self) {
+		let files = rfd::FileDialog::new()
+			.add_filter(
+				strings::FILE_PICKER_AUDIO_NAME,
+				strings::FILE_PICKER_AUDIO_EXTENSIONS,
+			)
+			.pick_files();
+
+		files
+			.unwrap_or(vec![])
 			.iter()
 			.for_each(|path| self.files.push(AudioFile::new(path)));
+	}
+
+	pub fn clean_samples(&mut self) {
+		if self.remove_queue.len() == 0 {
+			return;
+		}
+
+		self.remove_queue.iter().for_each(|idx| {
+			self.files.remove(*idx);
+		});
+
+		self.remove_queue.clear();
 	}
 }
 
@@ -21,7 +37,7 @@ impl Default for Sampler {
 	fn default() -> Self {
 		Self {
 			files: vec![],
-			files_to_remove: Vec::with_capacity(1),
+			remove_queue: Vec::with_capacity(1),
 		}
 	}
 }
@@ -36,15 +52,8 @@ impl Window for Sampler {
 	}
 
 	fn ui(&mut self, ui: &mut egui::Ui) {
-		if ui.button("Add Audio").clicked() {
-			let files = rfd::FileDialog::new()
-				.add_filter(
-					"Audio Files (*.mp3, *.wav, *.flac, etc)",
-					&["mp3", "wav", "flac"],
-				)
-				.pick_files();
-
-			self.add_samples(files.unwrap_or(vec![]));
+		if ui.button(strings::SAMPLER_ADD_LABEL).clicked() {
+			self.add_samples();
 		}
 
 		self.files.iter().enumerate().for_each(|(index, file)| {
@@ -54,15 +63,12 @@ impl Window for Sampler {
 			ui.horizontal(|ui| {
 				ui.label(file_name).on_hover_text(full_path);
 				if ui.button("❌").clicked() {
-					self.files_to_remove.push(index);
+					self.remove_queue.push(index);
 				}
 			});
 		});
 
-		self.files_to_remove.iter().for_each(|idx| {
-			self.files.remove(*idx);
-		});
-		self.files_to_remove.clear();
+		self.clean_samples();
 	}
 
 	fn as_any(&mut self) -> &mut dyn std::any::Any {
