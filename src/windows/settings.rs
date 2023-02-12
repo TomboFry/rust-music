@@ -42,7 +42,7 @@ impl Window for Settings {
 
 	fn ui(&mut self, ui: &mut egui::Ui) {
 		ui.label(strings::SETTINGS_OUTPUT_DEVICE);
-		ComboBox::from_id_source("output-device")
+		ComboBox::from_id_source("settings-output-device")
 			.width(160.0)
 			.selected_text(&self.active_output)
 			.show_ui(ui, |ui| {
@@ -51,10 +51,10 @@ impl Window for Settings {
 				})
 			});
 
-		ui.allocate_space(Vec2::new(0.0, 16.0));
+		ui.add_space(16.0);
 
 		ui.label(strings::SETTINGS_INPUT_DEVICE);
-		ComboBox::from_id_source("input-device")
+		ComboBox::from_id_source("settings-input-device")
 			.width(160.0)
 			.selected_text(&self.active_input)
 			.show_ui(ui, |ui| {

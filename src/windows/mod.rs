@@ -41,7 +41,7 @@ impl Default for Windows {
 impl Windows {
 	pub fn new(windows: BTreeMap<&'static str, Box<dyn Window>>) -> Self {
 		let mut open = BTreeSet::new();
-		open.insert("Mixer".to_owned());
+		open.insert("Settings".to_owned());
 
 		Self { windows, open }
 	}

@@ -1,8 +1,8 @@
 use super::{application::SystemState, mixer::Mixer, sampler::Sampler};
 use crate::utilities::format::format_duration;
-use egui::{Context, Layout, Modifiers, Style, Ui};
+use egui::{Context, Layout, Modifiers, Ui};
 use egui_extras_xt::displays::{
-	DisplayKind, DisplayMetrics, DisplayStyle, DisplayStylePreset, SegmentedDisplayWidget,
+	DisplayKind, DisplayMetrics, DisplayStylePreset, SegmentedDisplayWidget,
 };
 
 pub fn draw_application_menu(ctx: &Context, state: &mut SystemState) {
