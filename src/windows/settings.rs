@@ -1,5 +1,6 @@
-use crate::{resources::strings, windows::Window};
-use egui::{ComboBox, Vec2};
+use crate::{resources::strings, utilities::audio, windows::Window};
+use cpal::traits::DeviceTrait;
+use egui::ComboBox;
 
 pub struct Settings {
 	available_inputs: Vec<String>,
@@ -10,12 +11,22 @@ pub struct Settings {
 
 impl Default for Settings {
 	fn default() -> Self {
+		let devices = audio::get_devices();
 		Self {
-			// TODO: Get list of devices using CPAL and update when necessary
-			available_inputs: vec!["Default Input".to_owned(), "Second Input".to_owned()],
-			available_outputs: vec!["Default Output".to_owned(), "Second Input".to_owned()],
-			active_input: "Default Input".to_owned(),
-			active_output: "Default Output".to_owned(),
+			available_inputs: devices
+				.input_list
+				.iter()
+				.map(|device| device.name().unwrap())
+				.collect(),
+
+			available_outputs: devices
+				.output_list
+				.iter()
+				.map(|device| device.name().unwrap())
+				.collect(),
+
+			active_input: devices.input_default.name().unwrap(),
+			active_output: devices.output_default.name().unwrap(),
 		}
 	}
 }
