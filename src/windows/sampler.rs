@@ -14,8 +14,7 @@ impl Sampler {
 			)
 			.pick_files();
 
-		files
-			.unwrap_or(vec![])
+		files.unwrap_or(vec![])
 			.iter()
 			.for_each(|path| self.files.push(AudioFile::new(path)));
 	}

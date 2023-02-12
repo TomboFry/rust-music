@@ -60,10 +60,9 @@ impl Window for Mixer {
 
 		egui::ScrollArea::horizontal().show(ui, |ui| {
 			ui.horizontal(|ui| {
-				self.channels
-					.iter_mut()
-					.enumerate()
-					.for_each(|(idx, c)| c.view(ui, idx, &mut self.remove_queue));
+				self.channels.iter_mut().enumerate().for_each(|(idx, c)| {
+					c.view(ui, idx, &mut self.remove_queue)
+				});
 			});
 		});
 

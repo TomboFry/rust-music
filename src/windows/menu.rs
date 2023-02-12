@@ -24,41 +24,37 @@ pub fn draw_application_menu(ctx: &Context, state: &mut SystemState) {
 				ui.separator();
 
 				ui.label("Tempo:");
-				ui.add(
-					egui::DragValue::new(&mut state.project.tempo)
-						.clamp_range(40.0..=320.0)
-						.suffix(" bpm"),
-				);
+				ui.add(egui::DragValue::new(&mut state.project.tempo)
+					.clamp_range(40.0..=320.0)
+					.suffix(" bpm"));
 
 				ui.separator();
 
 				ui.label("Time Signature:");
-				ui.add(
-					egui::DragValue::new(&mut state.project.time_signature_numerator)
-						.clamp_range(2..=16),
-				);
+				ui.add(egui::DragValue::new(
+					&mut state.project.time_signature_numerator,
+				)
+				.clamp_range(2..=16));
 				ui.label("/");
-				ui.add(
-					egui::DragValue::new(&mut state.project.time_signature_denominator)
-						.clamp_range(2..=16),
-				);
+				ui.add(egui::DragValue::new(
+					&mut state.project.time_signature_denominator,
+				)
+				.clamp_range(2..=16));
 
 				ui.separator();
 
-				ui.add(
-					SegmentedDisplayWidget::new(DisplayKind::SevenSegment)
-						.digit_height(24.0)
-						.style_preset(DisplayStylePreset::DeLoreanRed)
-						.push_string(format_duration(&state.project.song_position))
-						.show_apostrophes(false)
-						.metrics(DisplayMetrics {
-							colon_separation: 0.4,
-							digit_spacing: 0.75,
-							margin_horizontal: 1.0,
-							margin_vertical: 0.2,
-							..Default::default()
-						}),
-				);
+				ui.add(SegmentedDisplayWidget::new(DisplayKind::SevenSegment)
+					.digit_height(24.0)
+					.style_preset(DisplayStylePreset::DeLoreanRed)
+					.push_string(format_duration(&state.project.song_position))
+					.show_apostrophes(false)
+					.metrics(DisplayMetrics {
+						colon_separation: 0.4,
+						digit_spacing: 0.75,
+						margin_horizontal: 1.0,
+						margin_vertical: 0.2,
+						..Default::default()
+					}));
 			},
 		);
 	});
@@ -89,8 +85,8 @@ fn file_menu_button(ui: &mut Ui) {
 		ui.set_min_width(200.0);
 		ui.style_mut().wrap = Some(false);
 
-		if ui
-			.add(egui::Button::new("Exit").shortcut_text(ui.ctx().format_shortcut(&quit_shortcut)))
+		if ui.add(egui::Button::new("Exit")
+			.shortcut_text(ui.ctx().format_shortcut(&quit_shortcut)))
 			.clicked()
 		{
 			ui.close_menu();

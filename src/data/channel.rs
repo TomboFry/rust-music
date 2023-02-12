@@ -20,22 +20,18 @@ impl Channel {
 	}
 
 	fn view_contents(&mut self, ui: &mut Ui, index: usize, remove_queue: &mut Vec<usize>) {
-		ui.add(
-			TextEdit::singleline(&mut self.name)
-				.desired_width(64.0)
-				.font(TextStyle::Small)
-				.min_size(Vec2::new(64.0, 12.0)),
-		);
+		ui.add(TextEdit::singleline(&mut self.name)
+			.desired_width(64.0)
+			.font(TextStyle::Small)
+			.min_size(Vec2::new(64.0, 12.0)));
 
 		// Panning
-		ui.add(
-			AudioKnob::new(&mut self.panning)
-				.range(-1.0..=1.0)
-				.spread(0.75)
-				.drag_length(4.0)
-				.animated(false)
-				.shape(egui_extras_xt::common::WidgetShape::Circle),
-		);
+		ui.add(AudioKnob::new(&mut self.panning)
+			.range(-1.0..=1.0)
+			.spread(0.75)
+			.drag_length(4.0)
+			.animated(false)
+			.shape(egui_extras_xt::common::WidgetShape::Circle));
 		let label = if self.panning == 0.0 {
 			""
 		} else if self.panning > 0.0 {
@@ -49,12 +45,10 @@ impl Channel {
 		ui.add_enabled_ui(!self.muted, |ui| {
 			ui.horizontal(|ui| {
 				ui.allocate_space(Vec2::splat(16.0));
-				ui.add(
-					Slider::new(&mut self.volume, -30.0..=6.0)
-						.vertical()
-						.show_value(false),
-				)
-				.on_hover_text_at_pointer(format!("{:.1} dB", self.volume));
+				ui.add(Slider::new(&mut self.volume, -30.0..=6.0)
+					.vertical()
+					.show_value(false))
+					.on_hover_text_at_pointer(format!("{:.1} dB", self.volume));
 			});
 		});
 
