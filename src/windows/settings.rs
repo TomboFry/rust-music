@@ -1,13 +1,15 @@
 use crate::{resources::strings, utilities::audio, windows::Window};
 use cpal::traits::DeviceTrait;
-use cpal::Device;
+use cpal::{Device, SupportedStreamConfigRange};
 use egui::ComboBox;
 
 pub struct Settings {
-	available_inputs: Vec<Device>,
-	available_outputs: Vec<Device>,
-	active_input_index: usize,
-	active_output_index: usize,
+	pub available_inputs: Vec<Device>,
+	pub available_outputs: Vec<Device>,
+	pub active_input_index: usize,
+	pub active_output_index: usize,
+	pub output_sample_rate: u32,
+	output_config_range: Option<SupportedStreamConfigRange>,
 }
 
 impl Default for Settings {
@@ -16,24 +18,29 @@ impl Default for Settings {
 
 		let default_input_name = devices.input_default.name().unwrap();
 		let default_output_name = devices.output_default.name().unwrap();
+		let active_input_index =
+			Settings::get_device_index(&devices.input_list, &default_input_name);
+		let active_output_index =
+			Settings::get_device_index(&devices.output_list, &default_output_name);
 
-		Self {
-			active_input_index: Settings::get_device_index(
-				&devices.input_list,
-				&default_input_name,
-			),
-			active_output_index: Settings::get_device_index(
-				&devices.output_list,
-				&default_output_name,
-			),
+		let mut settings = Self {
+			active_input_index,
+			active_output_index,
 			available_inputs: devices.input_list,
 			available_outputs: devices.output_list,
-		}
+			output_sample_rate: 48000,
+			output_config_range: None,
+		};
+
+		settings.update_output_config();
+		// settings.update_input_config();
+
+		settings
 	}
 }
 
 impl Settings {
-	pub fn get_device_index(devices: &[Device], name: &str) -> usize {
+	fn get_device_index(devices: &[Device], name: &str) -> usize {
 		if let Some((idx, _)) = devices
 			.iter()
 			.enumerate()
@@ -45,16 +52,30 @@ impl Settings {
 		}
 	}
 
-	pub fn get_device_output_name(&self) -> String {
+	fn get_device_output_name(&self) -> String {
 		self.available_outputs[self.active_output_index]
 			.name()
 			.unwrap()
 	}
 
-	pub fn get_device_input_name(&self) -> String {
+	fn get_device_input_name(&self) -> String {
 		self.available_inputs[self.active_input_index]
 			.name()
 			.unwrap()
+	}
+
+	fn update_output_config(&mut self) {
+		let config = self.available_outputs[self.active_output_index]
+			.supported_output_configs()
+			.unwrap()
+			.next()
+			.unwrap();
+
+		self.output_sample_rate = self
+			.output_sample_rate
+			.clamp(config.min_sample_rate().0, config.max_sample_rate().0);
+
+		self.output_config_range = Some(config);
 	}
 }
 
@@ -77,13 +98,15 @@ impl Window for Settings {
 			.selected_text(self.get_device_output_name())
 			.show_ui(ui, |ui| {
 				for (index, device) in self.available_outputs.iter().enumerate() {
-					output_changed = ui
-						.selectable_value(
-							&mut self.active_output_index,
-							index,
-							device.name().unwrap(),
-						)
-						.changed();
+					if ui.selectable_value(
+						&mut self.active_output_index,
+						index,
+						device.name().unwrap(),
+					)
+					.changed()
+					{
+						output_changed = true;
+					}
 				}
 			});
 
@@ -95,15 +118,36 @@ impl Window for Settings {
 			.selected_text(self.get_device_input_name())
 			.show_ui(ui, |ui| {
 				for (index, device) in self.available_inputs.iter().enumerate() {
-					input_changed = ui
-						.selectable_value(
-							&mut self.active_input_index,
-							index,
-							device.name().unwrap(),
-						)
-						.changed();
+					if ui.selectable_value(
+						&mut self.active_input_index,
+						index,
+						device.name().unwrap(),
+					)
+					.changed()
+					{
+						input_changed = true;
+					}
 				}
 			});
+
+		ui.add_enabled_ui(self.output_config_range.is_some(), |ui| {
+			let mut drag_value =
+				egui::DragValue::new(&mut self.output_sample_rate).suffix(" Hz");
+
+			if let Some(range) = self.output_config_range.as_ref() {
+				let min = range.min_sample_rate().0;
+				let max = range.max_sample_rate().0;
+				drag_value = drag_value.clamp_range(min..=max);
+			}
+
+			ui.add_space(16.0);
+			ui.label(strings::SETTINGS_SAMPLE_RATE);
+			ui.add(drag_value);
+		});
+
+		if output_changed {
+			self.update_output_config();
+		}
 	}
 
 	fn as_any(&mut self) -> &mut dyn std::any::Any {
