@@ -32,6 +32,7 @@ impl Channel {
 			.drag_length(4.0)
 			.animated(false)
 			.shape(egui_extras_xt::common::WidgetShape::Circle));
+
 		let label = if self.panning == 0.0 {
 			""
 		} else if self.panning > 0.0 {
@@ -39,6 +40,7 @@ impl Channel {
 		} else {
 			"L"
 		};
+
 		ui.label(format!("{:.0}% {}", (self.panning * 100.0).abs(), label));
 
 		// Volume
@@ -54,6 +56,7 @@ impl Channel {
 
 		ui.toggle_value(&mut self.muted, "M");
 
+		// First index is the master channel - let's not remove that!
 		if index > 0 {
 			if ui.button("❌").clicked() {
 				remove_queue.push(index);

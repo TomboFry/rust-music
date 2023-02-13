@@ -1,5 +1,8 @@
-use crate::{data::channel::Channel, resources::strings, windows::Window};
+use self::channel::Channel;
+use crate::{resources::strings, windows::Window};
 use egui::{TopBottomPanel, Ui};
+
+mod channel;
 
 pub struct Mixer {
 	pub channels: Vec<Channel>,
