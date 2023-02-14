@@ -115,29 +115,6 @@ fn add_button(ui: &mut Ui, state: &mut SystemState) {
 }
 
 fn view_button(ui: &mut Ui, windows: &mut Windows) {
-	// TODO: Move these to window management in `mod.rs`
-
-	let mixer_shortcut =
-		egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::M);
-
-	let sampler_shortcut =
-		egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::A);
-
-	let settings_shortcut =
-		egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::S);
-
-	if ui.input_mut(|i| i.consume_shortcut(&mixer_shortcut)) {
-		view_button_toggle_window(windows, WindowName::Mixer);
-	}
-
-	if ui.input_mut(|i| i.consume_shortcut(&sampler_shortcut)) {
-		view_button_toggle_window(windows, WindowName::Sampler);
-	}
-
-	if ui.input_mut(|i| i.consume_shortcut(&settings_shortcut)) {
-		view_button_toggle_window(windows, WindowName::Settings);
-	}
-
 	ui.menu_button(strings::MENU_LABEL_VIEW, |ui| {
 		ui.set_min_width(200.0);
 		ui.style_mut().wrap = Some(false);
@@ -146,16 +123,13 @@ fn view_button(ui: &mut Ui, windows: &mut Windows) {
 			let window_open = windows.open.contains(&name);
 			let window_icon = if window_open { "✔" } else { "  " };
 
-			let shortcut = match name {
-				WindowName::Mixer => mixer_shortcut,
-				WindowName::Sampler => sampler_shortcut,
-				WindowName::Settings => settings_shortcut,
-			};
+			let mut button = egui::Button::new(format!("{window_icon} {name}"));
 
-			if ui.add(egui::Button::new(format!("{window_icon} {name}"))
-				.shortcut_text(ui.ctx().format_shortcut(&shortcut)))
-				.clicked()
-			{
+			if let Some(shortcut) = windows.windows[&name].toggle_shortcut() {
+				button = button.shortcut_text(ui.ctx().format_shortcut(&shortcut));
+			}
+
+			if ui.add(button).clicked() {
 				view_button_toggle_window(windows, name);
 				ui.close_menu();
 			}
@@ -163,7 +137,7 @@ fn view_button(ui: &mut Ui, windows: &mut Windows) {
 	});
 }
 
-fn view_button_toggle_window(windows: &mut Windows, window_name: WindowName) {
+pub fn view_button_toggle_window(windows: &mut Windows, window_name: WindowName) {
 	let window_open = windows.open.contains(&window_name);
 	if window_open {
 		windows.open.remove(&window_name);

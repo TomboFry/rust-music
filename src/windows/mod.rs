@@ -40,6 +40,8 @@ pub trait Window {
 	fn ui(&mut self, ui: &mut egui::Ui, state: &mut SystemState);
 
 	fn as_any(&mut self) -> &mut dyn Any;
+
+	fn toggle_shortcut(&self) -> Option<egui::KeyboardShortcut>;
 }
 
 type WindowMap = BTreeMap<WindowName, Box<dyn Window>>;
@@ -86,8 +88,17 @@ impl Windows {
 		let Self { windows, open } = self;
 		for (name, window) in windows {
 			let mut is_open = open.contains(name);
+
+			// Display Window
 			window.show(ctx, name, &mut is_open, state);
 			Windows::set_open(open, name, is_open);
+
+			// Handle toggle shortcuts
+			if let Some(shortcut) = window.toggle_shortcut() {
+				if ctx.input_mut(|i| i.consume_shortcut(&shortcut)) {
+					Windows::set_open(open, name, !is_open);
+				}
+			}
 		}
 	}
 
@@ -97,7 +108,9 @@ impl Windows {
 				open.insert(key.to_owned());
 			}
 		} else {
-			open.remove(key);
+			if open.contains(key) {
+				open.remove(key);
+			}
 		}
 	}
 }

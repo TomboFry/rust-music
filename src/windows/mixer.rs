@@ -55,6 +55,13 @@ impl Window for MixerWindow {
 	fn as_any(&mut self) -> &mut dyn std::any::Any {
 		self
 	}
+
+	fn toggle_shortcut(&self) -> Option<egui::KeyboardShortcut> {
+		Some(egui::KeyboardShortcut::new(
+			egui::Modifiers::CTRL | egui::Modifiers::SHIFT,
+			egui::Key::M,
+		))
+	}
 }
 
 fn view_contents(
