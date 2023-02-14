@@ -1,9 +1,12 @@
-use super::{application::SystemState, sampler::Sampler, WindowName, Windows};
+use super::{WindowName, Windows};
+use crate::data::SystemState;
+use crate::resources::strings;
 use crate::utilities::format::format_duration;
 use egui::{Context, Layout, Modifiers, Ui};
 use egui_extras_xt::displays::{
 	DisplayKind, DisplayMetrics, DisplayStylePreset, SegmentedDisplayWidget,
 };
+use strum::IntoEnumIterator;
 
 pub fn draw_application_menu(ctx: &Context, windows: &mut Windows, state: &mut SystemState) {
 	egui::TopBottomPanel::top("application-menu-bar").show(ctx, |ui| {
@@ -16,21 +19,22 @@ pub fn draw_application_menu(ctx: &Context, windows: &mut Windows, state: &mut S
 			|ui| {
 				// Menu Buttons
 				menu_set_button_style(ui);
-				file_menu_button(ui);
-				add_menu_button(ui, windows, state);
+				file_button(ui);
+				add_button(ui, state);
+				view_button(ui, windows);
 				ui.reset_style();
 
 				// Project Toolbar
 				ui.separator();
 
-				ui.label("Tempo:");
+				ui.label(strings::PROJECT_TEMPO);
 				ui.add(egui::DragValue::new(&mut state.project.tempo)
 					.clamp_range(40.0..=320.0)
 					.suffix(" bpm"));
 
 				ui.separator();
 
-				ui.label("Time Signature:");
+				ui.label(strings::PROJECT_TIME_SIGNATURE);
 				ui.add(egui::DragValue::new(
 					&mut state.project.time_signature_numerator,
 				)
@@ -69,10 +73,8 @@ fn menu_set_button_style(ui: &mut Ui) {
 	style.visuals.widgets.inactive.bg_stroke = egui::Stroke::NONE;
 }
 
-fn file_menu_button(ui: &mut Ui) {
+fn file_button(ui: &mut Ui) {
 	let quit_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::Q);
-	// let reset_shortcut =
-	// 	egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::R);
 
 	// NOTE: we must check the shortcuts OUTSIDE of the actual "File" menu,
 	// or else they would only be checked if the "File" menu was actually open!
@@ -81,7 +83,7 @@ fn file_menu_button(ui: &mut Ui) {
 		std::process::exit(0);
 	}
 
-	ui.menu_button("File", |ui| {
+	ui.menu_button(strings::MENU_LABEL_FILE, |ui| {
 		ui.set_min_width(200.0);
 		ui.style_mut().wrap = Some(false);
 
@@ -95,24 +97,77 @@ fn file_menu_button(ui: &mut Ui) {
 	});
 }
 
-fn add_menu_button(ui: &mut Ui, windows: &mut Windows, state: &mut SystemState) {
-	ui.menu_button("Add", |ui| {
+fn add_button(ui: &mut Ui, state: &mut SystemState) {
+	ui.menu_button(strings::MENU_LABEL_ADD, |ui| {
 		ui.set_min_width(200.0);
 		ui.style_mut().wrap = Some(false);
 
 		if ui.add(egui::Button::new("Channel")).clicked() {
 			state.mixer.add_channel();
-
 			ui.close_menu();
 		}
 
 		if ui.add(egui::Button::new("Sample(s)")).clicked() {
-			let window = windows.windows.get_mut(&WindowName::Sampler).unwrap();
-			let sampler: &mut Sampler = window.as_any().downcast_mut().unwrap();
-
+			state.sampler.add_samples();
 			ui.close_menu();
-
-			sampler.add_samples();
 		}
 	});
+}
+
+fn view_button(ui: &mut Ui, windows: &mut Windows) {
+	// TODO: Move these to window management in `mod.rs`
+
+	let mixer_shortcut =
+		egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::M);
+
+	let sampler_shortcut =
+		egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::A);
+
+	let settings_shortcut =
+		egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::S);
+
+	if ui.input_mut(|i| i.consume_shortcut(&mixer_shortcut)) {
+		view_button_toggle_window(windows, WindowName::Mixer);
+	}
+
+	if ui.input_mut(|i| i.consume_shortcut(&sampler_shortcut)) {
+		view_button_toggle_window(windows, WindowName::Sampler);
+	}
+
+	if ui.input_mut(|i| i.consume_shortcut(&settings_shortcut)) {
+		view_button_toggle_window(windows, WindowName::Settings);
+	}
+
+	ui.menu_button(strings::MENU_LABEL_VIEW, |ui| {
+		ui.set_min_width(200.0);
+		ui.style_mut().wrap = Some(false);
+
+		for name in WindowName::iter() {
+			let window_open = windows.open.contains(&name);
+			let window_icon = if window_open { "✔" } else { "  " };
+
+			let shortcut = match name {
+				WindowName::Mixer => mixer_shortcut,
+				WindowName::Sampler => sampler_shortcut,
+				WindowName::Settings => settings_shortcut,
+			};
+
+			if ui.add(egui::Button::new(format!("{window_icon} {name}"))
+				.shortcut_text(ui.ctx().format_shortcut(&shortcut)))
+				.clicked()
+			{
+				view_button_toggle_window(windows, name);
+				ui.close_menu();
+			}
+		}
+	});
+}
+
+fn view_button_toggle_window(windows: &mut Windows, window_name: WindowName) {
+	let window_open = windows.open.contains(&window_name);
+	if window_open {
+		windows.open.remove(&window_name);
+	} else {
+		windows.open.insert(window_name);
+	}
 }

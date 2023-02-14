@@ -1,5 +1,3 @@
-use crate::resources::strings;
-
 pub struct Channel {
 	pub volume: f32,
 	pub panning: f32,
@@ -8,12 +6,12 @@ pub struct Channel {
 }
 
 impl Channel {
-	pub fn new(name: Option<&str>) -> Self {
+	pub fn new(name: &str) -> Self {
 		Self {
 			volume: 0.0,
 			panning: 0.0,
 			muted: false,
-			name: name.unwrap_or(strings::CHANNEL_DEFAULT_NAME).to_owned(),
+			name: name.to_owned(),
 		}
 	}
 }

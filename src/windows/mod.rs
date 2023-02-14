@@ -1,19 +1,20 @@
-use self::{application::SystemState, mixer::MixerWindow, sampler::Sampler, settings::Settings};
-use crate::resources::strings;
-use egui::Context;
+use self::{mixer::MixerWindow, sampler::SamplerWindow, settings::Settings};
+use crate::{data::SystemState, resources::strings};
 use std::{
 	any::Any,
 	collections::{BTreeMap, BTreeSet},
 };
-use strum::{AsRefStr, Display};
+use strum::{AsRefStr, Display, EnumIter};
 
-pub mod application;
-pub mod menu;
+pub use application::System;
+
+mod application;
+pub mod main_menu;
 pub mod mixer;
 pub mod sampler;
 pub mod settings;
 
-#[derive(Clone, Copy, Display, PartialEq, Eq, PartialOrd, Ord, AsRefStr)]
+#[derive(AsRefStr, Display, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter)]
 pub enum WindowName {
 	#[strum(serialize = "Mixer")]
 	Mixer,
@@ -51,8 +52,8 @@ pub struct Windows {
 impl Default for Windows {
 	fn default() -> Self {
 		let mut windows: WindowMap = BTreeMap::new();
-		windows.insert(WindowName::Mixer, Box::new(MixerWindow {}));
-		windows.insert(WindowName::Sampler, Box::new(Sampler::default()));
+		windows.insert(WindowName::Mixer, Box::new(MixerWindow::default()));
+		windows.insert(WindowName::Sampler, Box::new(SamplerWindow::default()));
 		windows.insert(WindowName::Settings, Box::new(Settings::default()));
 
 		Self::new(windows)
@@ -67,7 +68,7 @@ impl Windows {
 		Self { windows, open }
 	}
 
-	pub fn checkboxes(&mut self, ctx: &Context) {
+	pub fn checkboxes(&mut self, ctx: &egui::Context) {
 		let Self { open, windows } = self;
 		egui::TopBottomPanel::bottom("application-windows").show(ctx, |ui| {
 			ui.horizontal(|ui| {
@@ -81,7 +82,7 @@ impl Windows {
 		});
 	}
 
-	pub fn windows(&mut self, ctx: &Context, state: &mut SystemState) {
+	pub fn windows(&mut self, ctx: &egui::Context, state: &mut SystemState) {
 		let Self { windows, open } = self;
 		for (name, window) in windows {
 			let mut is_open = open.contains(name);

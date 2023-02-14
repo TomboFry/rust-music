@@ -1,22 +1,5 @@
-use crate::{
-	data::project::Project,
-	resources::assets::setup_custom_fonts,
-	windows::{menu::draw_application_menu, mixer::Mixer, Windows},
-};
-
-pub struct SystemState {
-	pub project: Project,
-	pub mixer: Mixer,
-}
-
-impl Default for SystemState {
-	fn default() -> Self {
-		Self {
-			project: Project::default(),
-			mixer: Mixer::default(),
-		}
-	}
-}
+use super::{main_menu::draw_application_menu, Windows};
+use crate::{data::SystemState, resources::assets::setup_custom_fonts};
 
 pub struct System {
 	pub state: SystemState,

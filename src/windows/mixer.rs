@@ -1,17 +1,18 @@
-use super::application::SystemState;
 use crate::{
+	data::{Channel, SystemState},
 	resources::strings,
 	windows::{Window, WindowName},
 };
-use egui::{TopBottomPanel, Ui};
 
-pub mod channel;
-pub mod mixer;
-
-pub use channel::Channel;
-pub use mixer::Mixer;
+//=================
 
 pub struct MixerWindow {}
+
+impl Default for MixerWindow {
+	fn default() -> Self {
+		Self {}
+	}
+}
 
 impl Window for MixerWindow {
 	fn show(
@@ -29,8 +30,8 @@ impl Window for MixerWindow {
 			.show(ctx, |ui| self.ui(ui, state));
 	}
 
-	fn ui(&mut self, ui: &mut Ui, state: &mut SystemState) {
-		TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
+	fn ui(&mut self, ui: &mut egui::Ui, state: &mut SystemState) {
+		egui::TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
 				state.mixer.add_channel();
 			}
@@ -43,7 +44,7 @@ impl Window for MixerWindow {
 					.iter_mut()
 					.enumerate()
 					.for_each(|(idx, c)| {
-						view(c, ui, idx, &mut state.mixer.remove_queue)
+						view(ui, c, idx, &mut state.mixer.remove_queue)
 					});
 			});
 		});
@@ -56,7 +57,12 @@ impl Window for MixerWindow {
 	}
 }
 
-fn view_contents(channel: &mut Channel, ui: &mut Ui, index: usize, remove_queue: &mut Vec<usize>) {
+fn view_contents(
+	ui: &mut egui::Ui,
+	channel: &mut Channel,
+	index: usize,
+	remove_queue: &mut Vec<usize>,
+) {
 	ui.add(egui::TextEdit::singleline(&mut channel.name)
 		.desired_width(64.0)
 		.font(egui::TextStyle::Small)
@@ -101,12 +107,12 @@ fn view_contents(channel: &mut Channel, ui: &mut Ui, index: usize, remove_queue:
 	}
 }
 
-pub fn view(channel: &mut Channel, ui: &mut Ui, index: usize, remove_queue: &mut Vec<usize>) {
+fn view(ui: &mut egui::Ui, channel: &mut Channel, index: usize, remove_queue: &mut Vec<usize>) {
 	ui.group(|ui| {
 		ui.allocate_ui_with_layout(
 			egui::Vec2::new(64.0, 256.0),
 			egui::Layout::top_down_justified(egui::Align::Center),
-			|ui| view_contents(channel, ui, index, remove_queue),
+			|ui| view_contents(ui, channel, index, remove_queue),
 		);
 	});
 }

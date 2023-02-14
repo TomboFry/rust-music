@@ -10,7 +10,7 @@ impl Mixer {
 	pub fn add_channel(&mut self) {
 		let len = self.channels.len();
 		let name = format!("{} {}", strings::CHANNEL_DEFAULT_NAME, len + 1);
-		let channel = Channel::new(Some(&name));
+		let channel = Channel::new(&name);
 
 		self.channels.push(channel);
 	}
@@ -32,9 +32,9 @@ impl Default for Mixer {
 	fn default() -> Self {
 		Self {
 			channels: vec![
-				Channel::new(Some("Master")),
-				Channel::new(Some("Channel 1")),
-				Channel::new(Some("Channel 2")),
+				Channel::new("Master"),
+				Channel::new("Channel 1"),
+				Channel::new("Channel 2"),
 			],
 			remove_queue: Vec::with_capacity(1),
 		}

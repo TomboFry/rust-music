@@ -1,17 +1,15 @@
-use super::application::SystemState;
-use super::WindowName;
-use crate::{resources::strings, utilities::audio, windows::Window};
+use super::{SystemState, Window, WindowName};
+use crate::{resources::strings, utilities::audio};
 use cpal::traits::DeviceTrait;
-use cpal::{Device, SupportedStreamConfigRange};
-use egui::ComboBox;
 
+// TODO: Separate
 pub struct Settings {
-	pub available_inputs: Vec<Device>,
-	pub available_outputs: Vec<Device>,
+	pub available_inputs: Vec<cpal::Device>,
+	pub available_outputs: Vec<cpal::Device>,
 	pub active_input_index: usize,
 	pub active_output_index: usize,
 	pub output_sample_rate: u32,
-	output_config_range: Option<SupportedStreamConfigRange>,
+	output_config_range: Option<cpal::SupportedStreamConfigRange>,
 }
 
 impl Default for Settings {
@@ -42,7 +40,7 @@ impl Default for Settings {
 }
 
 impl Settings {
-	fn get_device_index(devices: &[Device], name: &str) -> usize {
+	fn get_device_index(devices: &[cpal::Device], name: &str) -> usize {
 		if let Some((idx, _)) = devices
 			.iter()
 			.enumerate()
@@ -101,7 +99,7 @@ impl Window for Settings {
 		let mut input_changed = false;
 
 		ui.label(strings::SETTINGS_OUTPUT_DEVICE);
-		ComboBox::from_id_source("settings-output-device")
+		egui::ComboBox::from_id_source("settings-output-device")
 			.width(160.0)
 			.selected_text(self.get_device_output_name())
 			.show_ui(ui, |ui| {
@@ -121,7 +119,7 @@ impl Window for Settings {
 		ui.add_space(16.0);
 
 		ui.label(strings::SETTINGS_INPUT_DEVICE);
-		ComboBox::from_id_source("settings-input-device")
+		egui::ComboBox::from_id_source("settings-input-device")
 			.width(160.0)
 			.selected_text(self.get_device_input_name())
 			.show_ui(ui, |ui| {

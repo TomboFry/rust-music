@@ -2,6 +2,13 @@ pub const WINDOW_TITLE: &'static str = "Tombo's DAW";
 pub const PROJECT_DEFAULT_NAME: &'static str = "Untitled Project";
 pub const WINDOWS_LABEL: &'static str = "Windows:";
 
+pub const MENU_LABEL_FILE: &'static str = "File";
+pub const MENU_LABEL_ADD: &'static str = "Add";
+pub const MENU_LABEL_VIEW: &'static str = "View";
+
+pub const PROJECT_TEMPO: &'static str = "Tempo";
+pub const PROJECT_TIME_SIGNATURE: &'static str = "Time Signature";
+
 pub const CHANNEL_DEFAULT_NAME: &'static str = "Channel";
 pub const MIXER_NEW_CHANNEL: &'static str = "Add New Channel";
 
