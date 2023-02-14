@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use crate::windows::application::SystemState;
+use crate::windows::application::System;
 use resources::strings;
 
 mod data;
@@ -19,6 +19,6 @@ pub fn main() -> Result<(), eframe::Error> {
 	eframe::run_native(
 		strings::WINDOW_TITLE,
 		options,
-		Box::new(|cc| Box::new(SystemState::new(cc))),
+		Box::new(|cc| Box::new(System::new(cc))),
 	)
 }

@@ -1,11 +1,11 @@
-use super::{application::SystemState, mixer::Mixer, sampler::Sampler, WindowName};
+use super::{application::SystemState, sampler::Sampler, WindowName, Windows};
 use crate::utilities::format::format_duration;
 use egui::{Context, Layout, Modifiers, Ui};
 use egui_extras_xt::displays::{
 	DisplayKind, DisplayMetrics, DisplayStylePreset, SegmentedDisplayWidget,
 };
 
-pub fn draw_application_menu(ctx: &Context, state: &mut SystemState) {
+pub fn draw_application_menu(ctx: &Context, windows: &mut Windows, state: &mut SystemState) {
 	egui::TopBottomPanel::top("application-menu-bar").show(ctx, |ui| {
 		ui.with_layout(
 			Layout::from_main_dir_and_cross_align(
@@ -17,7 +17,7 @@ pub fn draw_application_menu(ctx: &Context, state: &mut SystemState) {
 				// Menu Buttons
 				menu_set_button_style(ui);
 				file_menu_button(ui);
-				add_menu_button(ui, state);
+				add_menu_button(ui, windows, state);
 				ui.reset_style();
 
 				// Project Toolbar
@@ -95,21 +95,19 @@ fn file_menu_button(ui: &mut Ui) {
 	});
 }
 
-fn add_menu_button(ui: &mut Ui, state: &mut SystemState) {
+fn add_menu_button(ui: &mut Ui, windows: &mut Windows, state: &mut SystemState) {
 	ui.menu_button("Add", |ui| {
 		ui.set_min_width(200.0);
 		ui.style_mut().wrap = Some(false);
 
 		if ui.add(egui::Button::new("Channel")).clicked() {
-			let window = state.windows.windows.get_mut(&WindowName::Mixer).unwrap();
-			let mixer: &mut Mixer = window.as_any().downcast_mut().unwrap();
-			mixer.add_channel();
+			state.mixer.add_channel();
 
 			ui.close_menu();
 		}
 
 		if ui.add(egui::Button::new("Sample(s)")).clicked() {
-			let window = state.windows.windows.get_mut(&WindowName::Sampler).unwrap();
+			let window = windows.windows.get_mut(&WindowName::Sampler).unwrap();
 			let sampler: &mut Sampler = window.as_any().downcast_mut().unwrap();
 
 			ui.close_menu();

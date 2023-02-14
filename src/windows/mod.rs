@@ -1,4 +1,4 @@
-use self::{mixer::Mixer, sampler::Sampler, settings::Settings};
+use self::{application::SystemState, mixer::MixerWindow, sampler::Sampler, settings::Settings};
 use crate::resources::strings;
 use egui::Context;
 use std::{
@@ -27,10 +27,16 @@ pub enum WindowName {
 
 pub trait Window {
 	/// Show windows, etc
-	fn show(&mut self, ctx: &egui::Context, name: &WindowName, open: &mut bool);
+	fn show(
+		&mut self,
+		ctx: &egui::Context,
+		name: &WindowName,
+		open: &mut bool,
+		state: &mut SystemState,
+	);
 
 	/// Display GUI inside window
-	fn ui(&mut self, ui: &mut egui::Ui);
+	fn ui(&mut self, ui: &mut egui::Ui, state: &mut SystemState);
 
 	fn as_any(&mut self) -> &mut dyn Any;
 }
@@ -45,7 +51,7 @@ pub struct Windows {
 impl Default for Windows {
 	fn default() -> Self {
 		let mut windows: WindowMap = BTreeMap::new();
-		windows.insert(WindowName::Mixer, Box::new(Mixer::default()));
+		windows.insert(WindowName::Mixer, Box::new(MixerWindow {}));
 		windows.insert(WindowName::Sampler, Box::new(Sampler::default()));
 		windows.insert(WindowName::Settings, Box::new(Settings::default()));
 
@@ -75,11 +81,11 @@ impl Windows {
 		});
 	}
 
-	pub fn windows(&mut self, ctx: &Context) {
+	pub fn windows(&mut self, ctx: &Context, state: &mut SystemState) {
 		let Self { windows, open } = self;
 		for (name, window) in windows {
 			let mut is_open = open.contains(name);
-			window.show(ctx, name, &mut is_open);
+			window.show(ctx, name, &mut is_open, state);
 			Windows::set_open(open, name, is_open);
 		}
 	}

@@ -1,9 +1,9 @@
+use super::application::SystemState;
+use super::WindowName;
 use crate::{resources::strings, utilities::audio, windows::Window};
 use cpal::traits::DeviceTrait;
 use cpal::{Device, SupportedStreamConfigRange};
 use egui::ComboBox;
-
-use super::WindowName;
 
 pub struct Settings {
 	pub available_inputs: Vec<Device>,
@@ -82,15 +82,21 @@ impl Settings {
 }
 
 impl Window for Settings {
-	fn show(&mut self, ctx: &egui::Context, name: &WindowName, open: &mut bool) {
+	fn show(
+		&mut self,
+		ctx: &egui::Context,
+		name: &WindowName,
+		open: &mut bool,
+		state: &mut SystemState,
+	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)
-			.show(ctx, |ui| self.ui(ui));
+			.show(ctx, |ui| self.ui(ui, state));
 	}
 
-	fn ui(&mut self, ui: &mut egui::Ui) {
+	fn ui(&mut self, ui: &mut egui::Ui, state: &mut SystemState) {
 		let mut output_changed = false;
 		let mut input_changed = false;
 

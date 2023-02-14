@@ -1,78 +1,51 @@
-use self::channel::Channel;
+use super::application::SystemState;
 use crate::{
 	resources::strings,
 	windows::{Window, WindowName},
 };
 use egui::{TopBottomPanel, Ui};
 
-mod channel;
+pub mod channel;
+pub mod mixer;
 
-pub struct Mixer {
-	pub channels: Vec<Channel>,
-	pub remove_queue: Vec<usize>,
-}
+pub struct MixerWindow {}
 
-impl Mixer {
-	pub fn add_channel(&mut self) {
-		let len = self.channels.len();
-		let name = format!("{} {}", strings::CHANNEL_DEFAULT_NAME, len + 1);
-		let channel = Channel::new(Some(&name));
-
-		self.channels.push(channel);
-	}
-
-	pub fn clean_channels(&mut self) {
-		if self.remove_queue.len() == 0 {
-			return;
-		}
-
-		self.remove_queue.iter().for_each(|idx| {
-			self.channels.remove(*idx);
-		});
-
-		self.remove_queue.clear();
-	}
-}
-
-impl Default for Mixer {
-	fn default() -> Self {
-		Self {
-			channels: vec![
-				Channel::new(Some("Master")),
-				Channel::new(Some("Channel 1")),
-				Channel::new(Some("Channel 2")),
-			],
-			remove_queue: Vec::with_capacity(1),
-		}
-	}
-}
-
-impl Window for Mixer {
-	fn show(&mut self, ctx: &egui::Context, name: &WindowName, open: &mut bool) {
+impl Window for MixerWindow {
+	fn show(
+		&mut self,
+		ctx: &egui::Context,
+		name: &WindowName,
+		open: &mut bool,
+		state: &mut SystemState,
+	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.resizable(true)
 			.collapsible(false)
 			.default_width(640.0)
-			.show(ctx, |ui| self.ui(ui));
+			.show(ctx, |ui| self.ui(ui, state));
 	}
 
-	fn ui(&mut self, ui: &mut Ui) {
+	fn ui(&mut self, ui: &mut Ui, state: &mut SystemState) {
 		TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
-				self.add_channel();
+				state.mixer.add_channel();
 			}
 		});
 
 		egui::ScrollArea::horizontal().show(ui, |ui| {
 			ui.horizontal(|ui| {
-				self.channels.iter_mut().enumerate().for_each(|(idx, c)| {
-					c.view(ui, idx, &mut self.remove_queue)
-				});
+				state.mixer
+					.channels
+					.iter_mut()
+					.enumerate()
+					.for_each(|(idx, c)| {
+						c.view(ui, idx, &mut state.mixer.remove_queue)
+					});
 			});
 		});
 
-		self.clean_channels();
+		state.mixer.clean_channels();
 	}
 
 	fn as_any(&mut self) -> &mut dyn std::any::Any {

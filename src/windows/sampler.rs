@@ -1,4 +1,4 @@
-use super::WindowName;
+use super::{application::SystemState, WindowName};
 use crate::{data::audio_file::AudioFile, resources::strings, windows::Window};
 
 pub struct Sampler {
@@ -43,15 +43,21 @@ impl Default for Sampler {
 }
 
 impl Window for Sampler {
-	fn show(&mut self, ctx: &egui::Context, name: &WindowName, open: &mut bool) {
+	fn show(
+		&mut self,
+		ctx: &egui::Context,
+		name: &WindowName,
+		open: &mut bool,
+		state: &mut SystemState,
+	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)
-			.show(ctx, |ui| self.ui(ui));
+			.show(ctx, |ui| self.ui(ui, state));
 	}
 
-	fn ui(&mut self, ui: &mut egui::Ui) {
+	fn ui(&mut self, ui: &mut egui::Ui, state: &mut SystemState) {
 		if ui.button(strings::SAMPLER_ADD_LABEL).clicked() {
 			self.add_samples();
 		}
