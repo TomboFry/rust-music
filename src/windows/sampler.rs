@@ -1,13 +1,8 @@
 use super::WindowName;
 use crate::{data::SystemState, resources::strings, windows::Window};
 
+#[derive(Default)]
 pub struct SamplerWindow {}
-
-impl Default for SamplerWindow {
-	fn default() -> Self {
-		Self {}
-	}
-}
 
 impl Window for SamplerWindow {
 	fn show(

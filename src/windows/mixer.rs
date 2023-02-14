@@ -6,13 +6,8 @@ use crate::{
 
 //=================
 
+#[derive(Default)]
 pub struct MixerWindow {}
-
-impl Default for MixerWindow {
-	fn default() -> Self {
-		Self {}
-	}
-}
 
 impl Window for MixerWindow {
 	fn show(

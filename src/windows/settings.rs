@@ -2,13 +2,8 @@ use super::{SystemState, Window, WindowName};
 use crate::resources::strings;
 use cpal::traits::DeviceTrait;
 
+#[derive(Default)]
 pub struct SettingsWindow {}
-
-impl Default for SettingsWindow {
-	fn default() -> Self {
-		Self {}
-	}
-}
 
 impl Window for SettingsWindow {
 	fn show(
