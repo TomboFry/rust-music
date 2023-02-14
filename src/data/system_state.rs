@@ -1,9 +1,10 @@
-use super::{Mixer, Project, Sampler};
+use super::{AudioSettings, Mixer, Project, Sampler};
 
 pub struct SystemState {
 	pub project: Project,
 	pub mixer: Mixer,
 	pub sampler: Sampler,
+	pub audio_settings: AudioSettings,
 }
 
 impl Default for SystemState {
@@ -12,6 +13,7 @@ impl Default for SystemState {
 			project: Project::default(),
 			mixer: Mixer::default(),
 			sampler: Sampler::default(),
+			audio_settings: AudioSettings::default(),
 		}
 	}
 }

@@ -1,4 +1,4 @@
-use self::{mixer::MixerWindow, sampler::SamplerWindow, settings::Settings};
+use self::{mixer::MixerWindow, sampler::SamplerWindow, settings::SettingsWindow};
 use crate::{data::SystemState, resources::strings};
 use std::{
 	any::Any,
@@ -56,7 +56,7 @@ impl Default for Windows {
 		let mut windows: WindowMap = BTreeMap::new();
 		windows.insert(WindowName::Mixer, Box::new(MixerWindow::default()));
 		windows.insert(WindowName::Sampler, Box::new(SamplerWindow::default()));
-		windows.insert(WindowName::Settings, Box::new(Settings::default()));
+		windows.insert(WindowName::Settings, Box::new(SettingsWindow::default()));
 
 		Self::new(windows)
 	}

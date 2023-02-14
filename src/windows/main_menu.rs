@@ -76,9 +76,6 @@ fn menu_set_button_style(ui: &mut Ui) {
 fn file_button(ui: &mut Ui) {
 	let quit_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::Q);
 
-	// NOTE: we must check the shortcuts OUTSIDE of the actual "File" menu,
-	// or else they would only be checked if the "File" menu was actually open!
-
 	if ui.input_mut(|i| i.consume_shortcut(&quit_shortcut)) {
 		std::process::exit(0);
 	}
