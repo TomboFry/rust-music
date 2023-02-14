@@ -3,6 +3,8 @@ use cpal::traits::DeviceTrait;
 use cpal::{Device, SupportedStreamConfigRange};
 use egui::ComboBox;
 
+use super::WindowName;
+
 pub struct Settings {
 	pub available_inputs: Vec<Device>,
 	pub available_outputs: Vec<Device>,
@@ -80,8 +82,8 @@ impl Settings {
 }
 
 impl Window for Settings {
-	fn show(&mut self, ctx: &egui::Context, name: &'static str, open: &mut bool) {
-		egui::Window::new(name)
+	fn show(&mut self, ctx: &egui::Context, name: &WindowName, open: &mut bool) {
+		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)

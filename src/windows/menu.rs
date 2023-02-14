@@ -1,4 +1,4 @@
-use super::{application::SystemState, mixer::Mixer, sampler::Sampler};
+use super::{application::SystemState, mixer::Mixer, sampler::Sampler, WindowName};
 use crate::utilities::format::format_duration;
 use egui::{Context, Layout, Modifiers, Ui};
 use egui_extras_xt::displays::{
@@ -101,7 +101,7 @@ fn add_menu_button(ui: &mut Ui, state: &mut SystemState) {
 		ui.style_mut().wrap = Some(false);
 
 		if ui.add(egui::Button::new("Channel")).clicked() {
-			let window = state.windows.windows.get_mut("Mixer").unwrap();
+			let window = state.windows.windows.get_mut(&WindowName::Mixer).unwrap();
 			let mixer: &mut Mixer = window.as_any().downcast_mut().unwrap();
 			mixer.add_channel();
 
@@ -109,7 +109,7 @@ fn add_menu_button(ui: &mut Ui, state: &mut SystemState) {
 		}
 
 		if ui.add(egui::Button::new("Sample(s)")).clicked() {
-			let window = state.windows.windows.get_mut("Sampler").unwrap();
+			let window = state.windows.windows.get_mut(&WindowName::Sampler).unwrap();
 			let sampler: &mut Sampler = window.as_any().downcast_mut().unwrap();
 
 			ui.close_menu();

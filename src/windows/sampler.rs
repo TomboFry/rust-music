@@ -1,3 +1,4 @@
+use super::WindowName;
 use crate::{data::audio_file::AudioFile, resources::strings, windows::Window};
 
 pub struct Sampler {
@@ -42,8 +43,8 @@ impl Default for Sampler {
 }
 
 impl Window for Sampler {
-	fn show(&mut self, ctx: &egui::Context, name: &'static str, open: &mut bool) {
-		egui::Window::new(name)
+	fn show(&mut self, ctx: &egui::Context, name: &WindowName, open: &mut bool) {
+		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)

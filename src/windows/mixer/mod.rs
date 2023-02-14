@@ -1,5 +1,8 @@
 use self::channel::Channel;
-use crate::{resources::strings, windows::Window};
+use crate::{
+	resources::strings,
+	windows::{Window, WindowName},
+};
 use egui::{TopBottomPanel, Ui};
 
 mod channel;
@@ -45,8 +48,8 @@ impl Default for Mixer {
 }
 
 impl Window for Mixer {
-	fn show(&mut self, ctx: &egui::Context, name: &'static str, open: &mut bool) {
-		egui::Window::new(name)
+	fn show(&mut self, ctx: &egui::Context, name: &WindowName, open: &mut bool) {
+		egui::Window::new(name.as_ref())
 			.open(open)
 			.resizable(true)
 			.collapsible(false)
