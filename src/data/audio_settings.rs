@@ -1,8 +1,5 @@
 use crate::utilities::audio::DeviceResult;
-use cpal::{
-	traits::{DeviceTrait, StreamTrait},
-	SampleRate,
-};
+use cpal::traits::{DeviceTrait, StreamTrait};
 
 pub struct AudioSettings {
 	pub available_inputs: Vec<cpal::Device>,
@@ -68,6 +65,7 @@ impl AudioSettings {
 	}
 
 	pub fn update_output_config(&mut self) {
+		// TODO: Better error handling
 		let config = self.available_outputs[self.active_output_index]
 			.supported_output_configs()
 			.unwrap()
@@ -84,7 +82,7 @@ impl AudioSettings {
 			.output_config_range
 			.clone()
 			.unwrap()
-			.with_sample_rate(SampleRate(self.output_sample_rate))
+			.with_sample_rate(cpal::SampleRate(self.output_sample_rate))
 			.config();
 
 		self.stream = self.available_outputs[self.active_output_index]
@@ -92,11 +90,12 @@ impl AudioSettings {
 				&final_config,
 				move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
 					for sample in data {
-						*sample = (rand::random::<f32>() * 0.5) - 0.25;
+						*sample = cpal::Sample::EQUILIBRIUM;
+						// *sample = (rand::random::<f32>() * 0.5) - 0.25;
 					}
 				},
 				move |err| {
-					eprintln!("{:?}", err.to_string());
+					eprintln!("{err}");
 				},
 				None,
 			)

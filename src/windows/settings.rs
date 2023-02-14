@@ -27,13 +27,13 @@ impl Window for SettingsWindow {
 		ui.label(strings::SETTINGS_OUTPUT_DEVICE);
 		egui::ComboBox::from_id_source("settings-output-device")
 			.width(160.0)
-			.selected_text(state.audio_settings.get_device_output_name())
+			.selected_text(state.audio.get_device_output_name())
 			.show_ui(ui, |ui| {
 				for (index, device) in
-					state.audio_settings.available_outputs.iter().enumerate()
+					state.audio.available_outputs.iter().enumerate()
 				{
 					if ui.selectable_value(
-						&mut state.audio_settings.active_output_index,
+						&mut state.audio.active_output_index,
 						index,
 						device.name().unwrap(),
 					)
@@ -49,13 +49,13 @@ impl Window for SettingsWindow {
 		ui.label(strings::SETTINGS_INPUT_DEVICE);
 		egui::ComboBox::from_id_source("settings-input-device")
 			.width(160.0)
-			.selected_text(state.audio_settings.get_device_input_name())
+			.selected_text(state.audio.get_device_input_name())
 			.show_ui(ui, |ui| {
 				for (index, device) in
-					state.audio_settings.available_inputs.iter().enumerate()
+					state.audio.available_inputs.iter().enumerate()
 				{
 					if ui.selectable_value(
-						&mut state.audio_settings.active_input_index,
+						&mut state.audio.active_input_index,
 						index,
 						device.name().unwrap(),
 					)
@@ -66,12 +66,12 @@ impl Window for SettingsWindow {
 				}
 			});
 
-		ui.add_enabled_ui(state.audio_settings.output_config_range.is_some(), |ui| {
+		ui.add_enabled_ui(state.audio.output_config_range.is_some(), |ui| {
 			let mut drag_value =
-				egui::DragValue::new(&mut state.audio_settings.output_sample_rate)
+				egui::DragValue::new(&mut state.audio.output_sample_rate)
 					.suffix(" Hz");
 
-			if let Some(range) = state.audio_settings.output_config_range.as_ref() {
+			if let Some(range) = state.audio.output_config_range.as_ref() {
 				let min = range.min_sample_rate().0;
 				let max = range.max_sample_rate().0;
 				drag_value = drag_value.clamp_range(min..=max);
@@ -83,7 +83,7 @@ impl Window for SettingsWindow {
 		});
 
 		if output_changed {
-			state.audio_settings.update_output_config();
+			state.audio.update_output_config();
 		}
 	}
 
