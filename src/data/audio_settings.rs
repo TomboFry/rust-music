@@ -1,5 +1,8 @@
-use crate::utilities::audio;
-use cpal::traits::DeviceTrait;
+use crate::utilities::audio::DeviceResult;
+use cpal::{
+	traits::{DeviceTrait, StreamTrait},
+	SampleRate,
+};
 
 pub struct AudioSettings {
 	pub available_inputs: Vec<cpal::Device>,
@@ -8,11 +11,12 @@ pub struct AudioSettings {
 	pub active_output_index: usize,
 	pub output_sample_rate: u32,
 	pub output_config_range: Option<cpal::SupportedStreamConfigRange>,
+	pub stream: Option<cpal::Stream>,
 }
 
 impl Default for AudioSettings {
 	fn default() -> Self {
-		let devices = audio::get_devices();
+		let devices = DeviceResult::get_devices();
 
 		let default_input_name = devices.input_default.name().unwrap();
 		let default_output_name = devices.output_default.name().unwrap();
@@ -28,6 +32,7 @@ impl Default for AudioSettings {
 			available_outputs: devices.output_list,
 			output_sample_rate: 48000,
 			output_config_range: None,
+			stream: None,
 		};
 
 		settings.update_output_config();
@@ -74,5 +79,32 @@ impl AudioSettings {
 			.clamp(config.min_sample_rate().0, config.max_sample_rate().0);
 
 		self.output_config_range = Some(config);
+
+		let final_config = self
+			.output_config_range
+			.clone()
+			.unwrap()
+			.with_sample_rate(SampleRate(self.output_sample_rate))
+			.config();
+
+		self.stream = self.available_outputs[self.active_output_index]
+			.build_output_stream(
+				&final_config,
+				move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+					for sample in data {
+						*sample = (rand::random::<f32>() * 0.5) - 0.25;
+					}
+				},
+				move |err| {
+					eprintln!("{:?}", err.to_string());
+				},
+				None,
+			)
+			.ok();
+
+		if let Some(stream) = &self.stream {
+			stream.play().unwrap();
+			println!("Playing!");
+		}
 	}
 }

@@ -2306,6 +2306,7 @@ dependencies = [
  "egui",
  "egui_extras_xt",
  "im",
+ "rand",
  "rfd",
  "strum",
 ]
