@@ -1,4 +1,4 @@
-use super::channel::Channel;
+use super::Channel;
 use crate::resources::strings;
 
 pub struct Mixer {

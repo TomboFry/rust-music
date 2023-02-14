@@ -1,7 +1,7 @@
 use crate::{
 	data::project::Project,
 	resources::assets::setup_custom_fonts,
-	windows::{menu::draw_application_menu, mixer::mixer::Mixer, Windows},
+	windows::{menu::draw_application_menu, mixer::Mixer, Windows},
 };
 
 pub struct SystemState {
