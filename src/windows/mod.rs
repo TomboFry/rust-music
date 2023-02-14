@@ -35,14 +35,16 @@ pub trait Window {
 	fn as_any(&mut self) -> &mut dyn Any;
 }
 
+type WindowMap = BTreeMap<WindowName, Box<dyn Window>>;
+
 pub struct Windows {
-	windows: BTreeMap<WindowName, Box<dyn Window>>,
+	windows: WindowMap,
 	open: BTreeSet<WindowName>,
 }
 
 impl Default for Windows {
 	fn default() -> Self {
-		let mut windows: BTreeMap<WindowName, Box<dyn Window>> = BTreeMap::new();
+		let mut windows: WindowMap = BTreeMap::new();
 		windows.insert(WindowName::Mixer, Box::new(Mixer::default()));
 		windows.insert(WindowName::Sampler, Box::new(Sampler::default()));
 		windows.insert(WindowName::Settings, Box::new(Settings::default()));
@@ -52,7 +54,7 @@ impl Default for Windows {
 }
 
 impl Windows {
-	pub fn new(windows: BTreeMap<WindowName, Box<dyn Window>>) -> Self {
+	pub fn new(windows: WindowMap) -> Self {
 		let mut open = BTreeSet::new();
 		open.insert(WindowName::Settings);
 

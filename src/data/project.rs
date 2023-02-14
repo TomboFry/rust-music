@@ -4,8 +4,8 @@ use crate::resources::strings;
 
 pub enum PlayState {
 	Stopped,
-	Paused,
-	Playing,
+	// Paused,
+	// Playing,
 }
 
 pub struct Project {
