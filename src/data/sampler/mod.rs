@@ -17,9 +17,9 @@ impl Sampler {
 			)
 			.pick_files();
 
-		files.unwrap_or(vec![])
-			.iter()
-			.for_each(|path| self.files.push(AudioFile::load_from_disk(path)));
+		files.unwrap_or(vec![]).iter().for_each(|path| {
+			self.files.push(AudioFile::load_from_disk(path));
+		});
 	}
 
 	pub fn clean_samples(&mut self) {

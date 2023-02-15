@@ -3,6 +3,7 @@ use std::{fs::File, io::Read, path::PathBuf};
 pub struct AudioFile {
 	pub path: PathBuf,
 	pub data: Vec<u8>,
+	pub channel: usize,
 }
 
 impl AudioFile {
@@ -14,6 +15,7 @@ impl AudioFile {
 		AudioFile {
 			path: path.to_owned(),
 			data: buffer,
+			channel: 0,
 		}
 	}
 }

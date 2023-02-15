@@ -1,5 +1,9 @@
 use super::WindowName;
-use crate::{data::SystemState, resources::strings, windows::Window};
+use crate::{
+	data::{AudioFile, SystemState},
+	resources::strings,
+	windows::Window,
+};
 
 #[derive(Default)]
 pub struct SamplerWindow {}
@@ -24,21 +28,29 @@ impl Window for SamplerWindow {
 			state.sampler.add_samples();
 		}
 
-		state.sampler
-			.files
-			.iter()
-			.enumerate()
-			.for_each(|(index, file)| {
-				let file_name = file.path.file_name().unwrap().to_str().unwrap();
-				let full_path = file.path.as_os_str().to_str().unwrap();
+		let mut ui_sample = |index, file: &mut AudioFile, ui: &mut egui::Ui| {
+			let file_name = file.path.file_name().unwrap().to_str().unwrap();
+			let full_path = file.path.as_os_str().to_str().unwrap();
 
-				ui.horizontal(|ui| {
-					ui.label(file_name).on_hover_text(full_path);
-					if ui.button("❌").clicked() {
-						state.sampler.remove_queue.push(index);
-					}
+			ui.add(egui::DragValue::new(&mut file.channel)
+				.clamp_range(0..=state.mixer.channels.len() - 1));
+
+			if ui.button("❌").clicked() {
+				state.sampler.remove_queue.push(index);
+			}
+
+			ui.label(file_name).on_hover_text(full_path);
+		};
+
+		egui::ScrollArea::vertical().show(ui, |ui| {
+			state.sampler
+				.files
+				.iter_mut()
+				.enumerate()
+				.for_each(|(index, file)| {
+					ui.horizontal(|ui| ui_sample(index, file, ui));
 				});
-			});
+		});
 
 		state.sampler.clean_samples();
 	}
