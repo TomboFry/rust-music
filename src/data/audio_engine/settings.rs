@@ -1,3 +1,4 @@
+use super::AudioEngine;
 use crate::utilities::audio::DeviceResult;
 use cpal::traits::{DeviceTrait, StreamTrait};
 
@@ -85,12 +86,24 @@ impl AudioSettings {
 			.with_sample_rate(cpal::SampleRate(self.output_sample_rate))
 			.config();
 
+		let (_, mut consumer) = AudioEngine::new();
+
+		// TODO: Move somewhere more appropriate
 		self.stream = self.available_outputs[self.active_output_index]
 			.build_output_stream(
 				&final_config,
 				move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+					// TODO: I'll figure out the proper way to do this!
+					let chunk = consumer.read_chunk(4096).unwrap();
+					let c = chunk.as_slices();
+					let d = [c.0, c.1].concat();
+					let mut index = 0;
+					assert!(d.len() >= data.len());
+					chunk.commit(data.len());
+
 					for sample in data {
-						*sample = cpal::Sample::EQUILIBRIUM;
+						*sample = d[index];
+						index += 1;
 						// *sample = (rand::random::<f32>() * 0.5) - 0.25;
 					}
 				},

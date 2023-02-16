@@ -10,5 +10,5 @@ pub use mixer::*;
 mod sampler;
 pub use sampler::*;
 
-mod audio_settings;
-pub use audio_settings::*;
+mod audio_engine;
+pub use audio_engine::*;
