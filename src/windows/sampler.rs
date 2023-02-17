@@ -1,13 +1,12 @@
-use std::{
-	sync::{Arc, Mutex},
-	time::Instant,
-};
-
 use super::WindowName;
 use crate::{
 	data::{AudioFile, PlayState, SystemState},
 	resources::strings,
 	windows::Window,
+};
+use std::{
+	sync::{Arc, Mutex},
+	time::Instant,
 };
 
 #[derive(Default)]

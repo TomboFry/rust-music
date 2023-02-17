@@ -1,8 +1,7 @@
-use std::sync::{Arc, Mutex};
-
 use super::{SystemState, Window, WindowName};
 use crate::resources::strings;
 use cpal::traits::DeviceTrait;
+use std::sync::{Arc, Mutex};
 
 #[derive(Default)]
 pub struct SettingsWindow {}

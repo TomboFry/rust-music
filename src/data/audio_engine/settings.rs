@@ -1,7 +1,26 @@
 use super::AudioEngineEvent;
-use crate::utilities::audio::DeviceResult;
-use cpal::traits::DeviceTrait;
+use cpal::traits::{DeviceTrait, HostTrait};
 use rtrb::Producer;
+
+pub struct DeviceResult {
+	pub input_default: cpal::Device,
+	pub output_default: cpal::Device,
+	pub input_list: Vec<cpal::Device>,
+	pub output_list: Vec<cpal::Device>,
+}
+
+impl DeviceResult {
+	pub fn get_devices() -> DeviceResult {
+		let host = cpal::default_host();
+		DeviceResult {
+			input_default: host.default_input_device().unwrap(),
+			input_list: host.input_devices().unwrap().collect(),
+
+			output_default: host.default_output_device().unwrap(),
+			output_list: host.output_devices().unwrap().collect(),
+		}
+	}
+}
 
 pub struct AudioSettings {
 	pub available_inputs: Vec<cpal::Device>,

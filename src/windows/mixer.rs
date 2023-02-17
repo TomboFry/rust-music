@@ -1,12 +1,9 @@
-use std::sync::{Arc, Mutex};
-
 use crate::{
 	data::{Channel, SystemState},
 	resources::strings,
 	windows::{Window, WindowName},
 };
-
-//=================
+use std::sync::{Arc, Mutex};
 
 #[derive(Default)]
 pub struct MixerWindow {}
