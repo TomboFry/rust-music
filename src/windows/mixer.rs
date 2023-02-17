@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use crate::{
 	data::{Channel, SystemState},
 	resources::strings,
@@ -15,7 +17,7 @@ impl Window for MixerWindow {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &mut SystemState,
+		state: &mut Arc<Mutex<SystemState>>,
 	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
@@ -25,7 +27,9 @@ impl Window for MixerWindow {
 			.show(ctx, |ui| self.ui(ui, state));
 	}
 
-	fn ui(&mut self, ui: &mut egui::Ui, state: &mut SystemState) {
+	fn ui(&mut self, ui: &mut egui::Ui, state: &mut Arc<Mutex<SystemState>>) {
+		let state = &mut state.lock().unwrap();
+		let mut remove_queue = Vec::with_capacity(1);
 		egui::TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
 				state.mixer.add_channel();
@@ -38,12 +42,11 @@ impl Window for MixerWindow {
 					.channels
 					.iter_mut()
 					.enumerate()
-					.for_each(|(idx, c)| {
-						view(ui, c, idx, &mut state.mixer.remove_queue)
-					});
+					.for_each(|(idx, c)| view(ui, c, idx, &mut remove_queue));
 			});
 		});
 
+		state.mixer.remove_queue = remove_queue;
 		state.mixer.clean_channels();
 	}
 

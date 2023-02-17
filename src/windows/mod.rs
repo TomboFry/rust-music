@@ -3,10 +3,11 @@ use crate::{data::SystemState, resources::strings};
 use std::{
 	any::Any,
 	collections::{BTreeMap, BTreeSet},
+	sync::{Arc, Mutex},
 };
 use strum::{AsRefStr, Display, EnumIter};
 
-pub use application::System;
+pub use application::*;
 
 mod application;
 pub mod main_menu;
@@ -33,11 +34,11 @@ pub trait Window {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &mut SystemState,
+		state: &mut Arc<Mutex<SystemState>>,
 	);
 
 	/// Display GUI inside window
-	fn ui(&mut self, ui: &mut egui::Ui, state: &mut SystemState);
+	fn ui(&mut self, ui: &mut egui::Ui, state: &mut Arc<Mutex<SystemState>>);
 
 	fn as_any(&mut self) -> &mut dyn Any;
 
@@ -84,7 +85,7 @@ impl Windows {
 		});
 	}
 
-	pub fn windows(&mut self, ctx: &egui::Context, state: &mut SystemState) {
+	pub fn windows(&mut self, ctx: &egui::Context, state: &mut Arc<Mutex<SystemState>>) {
 		let Self { windows, open } = self;
 		for (name, window) in windows {
 			let mut is_open = open.contains(name);

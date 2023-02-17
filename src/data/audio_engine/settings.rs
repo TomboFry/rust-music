@@ -1,6 +1,7 @@
-use super::AudioEngine;
+use super::AudioEngineEvent;
 use crate::utilities::audio::DeviceResult;
-use cpal::traits::{DeviceTrait, StreamTrait};
+use cpal::traits::DeviceTrait;
+use rtrb::Producer;
 
 pub struct AudioSettings {
 	pub available_inputs: Vec<cpal::Device>,
@@ -9,11 +10,11 @@ pub struct AudioSettings {
 	pub active_output_index: usize,
 	pub output_sample_rate: u32,
 	pub output_config_range: Option<cpal::SupportedStreamConfigRange>,
-	pub stream: Option<cpal::Stream>,
+	pub upd_tx: Producer<AudioEngineEvent>,
 }
 
-impl Default for AudioSettings {
-	fn default() -> Self {
+impl AudioSettings {
+	pub fn new(upd_tx: Producer<AudioEngineEvent>) -> Self {
 		let devices = DeviceResult::get_devices();
 
 		let default_input_name = devices.input_default.name().unwrap();
@@ -30,7 +31,7 @@ impl Default for AudioSettings {
 			available_outputs: devices.output_list,
 			output_sample_rate: 48000,
 			output_config_range: None,
-			stream: None,
+			upd_tx,
 		};
 
 		settings.update_output_config();
@@ -83,40 +84,23 @@ impl AudioSettings {
 			.output_config_range
 			.clone()
 			.unwrap()
-			.with_sample_rate(cpal::SampleRate(self.output_sample_rate))
-			.config();
+			.with_sample_rate(cpal::SampleRate(self.output_sample_rate));
 
-		let (_, mut consumer) = AudioEngine::new();
+		self.upd_tx
+			.push(AudioEngineEvent::Disable)
+			.expect("Queue full!");
 
-		// TODO: Move somewhere more appropriate
-		self.stream = self.available_outputs[self.active_output_index]
-			.build_output_stream(
-				&final_config,
-				move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-					// TODO: I'll figure out the proper way to do this!
-					let chunk = consumer.read_chunk(4096).unwrap();
-					let c = chunk.as_slices();
-					let d = [c.0, c.1].concat();
-					let mut index = 0;
-					assert!(d.len() >= data.len());
-					chunk.commit(data.len());
+		let buffer_size = match final_config.buffer_size() {
+			cpal::SupportedBufferSize::Unknown => 960,
+			cpal::SupportedBufferSize::Range { .. } => 960,
+		};
 
-					for sample in data {
-						*sample = d[index];
-						index += 1;
-						// *sample = (rand::random::<f32>() * 0.5) - 0.25;
-					}
-				},
-				move |err| {
-					eprintln!("{err}");
-				},
-				None,
-			)
-			.ok();
-
-		if let Some(stream) = &self.stream {
-			stream.play().unwrap();
-			println!("Playing!");
-		}
+		self.upd_tx
+			.push(AudioEngineEvent::Enable {
+				device_index: self.active_output_index,
+				config: final_config,
+				buffer_size,
+			})
+			.expect("Queue full!");
 	}
 }

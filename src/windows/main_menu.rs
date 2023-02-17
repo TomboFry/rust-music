@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex, MutexGuard};
+
 use super::{WindowName, Windows};
 use crate::data::SystemState;
 use crate::resources::strings;
@@ -8,7 +10,11 @@ use egui_extras_xt::displays::{
 };
 use strum::IntoEnumIterator;
 
-pub fn draw_application_menu(ctx: &Context, windows: &mut Windows, state: &mut SystemState) {
+pub fn draw_application_menu(
+	ctx: &Context,
+	windows: &mut Windows,
+	state_raw: &mut Arc<Mutex<SystemState>>,
+) {
 	egui::TopBottomPanel::top("application-menu-bar").show(ctx, |ui| {
 		ui.with_layout(
 			Layout::from_main_dir_and_cross_align(
@@ -17,6 +23,8 @@ pub fn draw_application_menu(ctx: &Context, windows: &mut Windows, state: &mut S
 			)
 			.with_cross_justify(true),
 			|ui| {
+				let state = &mut state_raw.lock().unwrap();
+
 				// Menu Buttons
 				menu_set_button_style(ui);
 				file_button(ui);
@@ -94,7 +102,7 @@ fn file_button(ui: &mut Ui) {
 	});
 }
 
-fn add_button(ui: &mut Ui, state: &mut SystemState) {
+fn add_button(ui: &mut Ui, state: &mut MutexGuard<SystemState>) {
 	ui.menu_button(strings::MENU_LABEL_ADD, |ui| {
 		ui.set_min_width(200.0);
 		ui.style_mut().wrap = Some(false);

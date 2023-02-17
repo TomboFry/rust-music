@@ -1,9 +1,12 @@
 use std::{fs::File, io::Read, path::PathBuf};
 
+use crate::data::PlayState;
+
 pub struct AudioFile {
 	pub path: PathBuf,
 	pub data: Vec<u8>,
 	pub channel: usize,
+	pub play_state: PlayState,
 }
 
 impl AudioFile {
@@ -16,6 +19,7 @@ impl AudioFile {
 			path: path.to_owned(),
 			data: buffer,
 			channel: 0,
+			play_state: PlayState::Stopped,
 		}
 	}
 }
