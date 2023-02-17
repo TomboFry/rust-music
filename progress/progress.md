@@ -1,5 +1,25 @@
 # Development Progress
 
+## 2023-02-16
+
+Boy oh boy am I in for a treat. Yes, the system "works" using the method I
+described below. I think it could definitely generate some sound from the mixer
+channels if I implemented it, too (it just generates random noise for the time
+being). **However**, because the shared system state is using a `Mutex`, which
+means whatever has access to it keeps control until it's done, the GUI has
+control over this more frequently than not, when actively using the application.
+As such, it frequently runs into buffer underruns, and the random noise becomes
+quite glitchy (I think it's chunks of noise repeating over until a new chunk is
+generated).
+
+Therefore, I believe my next plan of action is to implement a GUI event system,
+much like the existing `AudioEngineEvent` for re-initialising the engine
+whenever an output device is changed. This means every UI element needs to be
+accounted for, and will not change the system state unless it's part of a much
+larger enum. You could consider this the flux (or redux) pattern. I'm hoping
+that this will allow both the UI and Audio to have concurrent read-only access,
+and have the state update only when it needs to.
+
 ## 2023-02-14
 
 I've successfully opened an audio stream! The first test was to output white
