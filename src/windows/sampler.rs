@@ -1,7 +1,7 @@
 use super::WindowName;
 use crate::{
-	data::{AudioFile, PlayState, SystemState},
-	resources::strings,
+	data::{AudioFile, SystemState},
+	resources::{strings, PlayState},
 	windows::Window,
 };
 use std::{

@@ -1,12 +1,5 @@
-use std::time::{Duration, Instant};
-
-use crate::resources::strings;
-
-pub enum PlayState {
-	Stopped,
-	// Paused,
-	Playing(Instant),
-}
+use crate::resources::{strings, PlayState};
+use std::time::Duration;
 
 pub struct Project {
 	pub name: String,
