@@ -2,6 +2,7 @@ use super::{PlayState, Progress};
 use std::path::PathBuf;
 use std::time::Duration;
 
+#[derive(Debug)]
 pub enum UiEvent {
 	// General Project
 	ProjectName(String),
@@ -12,9 +13,7 @@ pub enum UiEvent {
 	ProjectSongPosition(Duration),
 
 	// Mixer
-	AddChannel {
-		name: String,
-	},
+	AddChannel,
 	RemoveChannel {
 		channel_index: usize,
 	},
@@ -25,6 +24,14 @@ pub enum UiEvent {
 	ChannelPanning {
 		channel_index: usize,
 		panning: f32,
+	},
+	ChannelName {
+		channel_index: usize,
+		name: String,
+	},
+	ChannelMuted {
+		channel_index: usize,
+		muted: bool,
 	},
 
 	// Sampler
@@ -50,6 +57,6 @@ pub enum UiEvent {
 	// Settings
 	OutputDevice(usize),
 	OutputDeviceSampleRate(u32),
-	OutputDeviceChannels(usize),
+	OutputDeviceChannels(u32),
 	InputDevice(usize),
 }
