@@ -3,7 +3,6 @@ use crate::resources::strings;
 
 pub struct Mixer {
 	pub channels: Vec<Channel>,
-	pub remove_queue: Vec<usize>,
 }
 
 impl Mixer {
@@ -13,18 +12,6 @@ impl Mixer {
 		let channel = Channel::new(&name);
 
 		self.channels.push(channel);
-	}
-
-	pub fn clean_channels(&mut self) {
-		if self.remove_queue.len() == 0 {
-			return;
-		}
-
-		self.remove_queue.iter().for_each(|idx| {
-			self.channels.remove(*idx);
-		});
-
-		self.remove_queue.clear();
 	}
 }
 
@@ -36,7 +23,6 @@ impl Default for Mixer {
 				Channel::new("Channel 1"),
 				Channel::new("Channel 2"),
 			],
-			remove_queue: Vec::with_capacity(1),
 		}
 	}
 }

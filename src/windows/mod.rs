@@ -1,9 +1,12 @@
 use self::{mixer::MixerWindow, sampler::SamplerWindow, settings::SettingsWindow};
-use crate::{data::SystemState, resources::strings};
+use crate::{
+	data::SystemState,
+	resources::{strings, UiEvent},
+};
 use std::{
 	any::Any,
-	collections::{BTreeMap, BTreeSet},
-	sync::{Arc, Mutex},
+	collections::{BTreeMap, BTreeSet, VecDeque},
+	sync::{Arc, RwLock},
 };
 use strum::{AsRefStr, Display, EnumIter};
 
@@ -34,11 +37,17 @@ pub trait Window {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &mut Arc<Mutex<SystemState>>,
+		state: &Arc<RwLock<SystemState>>,
+		ui_events: &mut VecDeque<UiEvent>,
 	);
 
 	/// Display GUI inside window
-	fn ui(&mut self, ui: &mut egui::Ui, state: &mut Arc<Mutex<SystemState>>);
+	fn ui(
+		&mut self,
+		ui: &mut egui::Ui,
+		state: &Arc<RwLock<SystemState>>,
+		ui_events: &mut VecDeque<UiEvent>,
+	);
 
 	fn as_any(&mut self) -> &mut dyn Any;
 
@@ -66,7 +75,9 @@ impl Default for Windows {
 impl Windows {
 	pub fn new(windows: WindowMap) -> Self {
 		let mut open = BTreeSet::new();
+		open.insert(WindowName::Sampler);
 		open.insert(WindowName::Settings);
+		open.insert(WindowName::Mixer);
 
 		Self { windows, open }
 	}
@@ -85,13 +96,18 @@ impl Windows {
 		});
 	}
 
-	pub fn windows(&mut self, ctx: &egui::Context, state: &mut Arc<Mutex<SystemState>>) {
+	pub fn windows(
+		&mut self,
+		ctx: &egui::Context,
+		state: &Arc<RwLock<SystemState>>,
+		ui_events: &mut VecDeque<UiEvent>,
+	) {
 		let Self { windows, open } = self;
 		for (name, window) in windows {
 			let mut is_open = open.contains(name);
 
 			// Display Window
-			window.show(ctx, name, &mut is_open, state);
+			window.show(ctx, name, &mut is_open, state, ui_events);
 			Windows::set_open(open, name, is_open);
 
 			// Handle toggle shortcuts

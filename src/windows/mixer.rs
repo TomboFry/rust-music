@@ -1,9 +1,12 @@
 use crate::{
 	data::{Channel, SystemState},
-	resources::strings,
+	resources::{strings, UiEvent},
 	windows::{Window, WindowName},
 };
-use std::sync::{Arc, Mutex};
+use std::{
+	collections::VecDeque,
+	sync::{Arc, RwLock},
+};
 
 #[derive(Default)]
 pub struct MixerWindow {}
@@ -14,37 +17,40 @@ impl Window for MixerWindow {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &mut Arc<Mutex<SystemState>>,
+		state: &Arc<RwLock<SystemState>>,
+		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.resizable(true)
 			.collapsible(false)
 			.default_width(640.0)
-			.show(ctx, |ui| self.ui(ui, state));
+			.show(ctx, |ui| self.ui(ui, state, ui_events));
 	}
 
-	fn ui(&mut self, ui: &mut egui::Ui, state: &mut Arc<Mutex<SystemState>>) {
-		let state = &mut state.lock().unwrap();
-		let mut remove_queue = Vec::with_capacity(1);
+	fn ui(
+		&mut self,
+		ui: &mut egui::Ui,
+		state: &Arc<RwLock<SystemState>>,
+		ui_events: &mut VecDeque<UiEvent>,
+	) {
+		let state = state.read().unwrap();
 		egui::TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
-				state.mixer.add_channel();
+				ui_events.push_back(UiEvent::AddChannel);
 			}
 		});
 
 		egui::ScrollArea::horizontal().show(ui, |ui| {
 			ui.horizontal(|ui| {
-				state.mixer
+				state
+					.mixer
 					.channels
-					.iter_mut()
+					.iter()
 					.enumerate()
-					.for_each(|(idx, c)| view(ui, c, idx, &mut remove_queue));
+					.for_each(|(idx, c)| view(ui, c, idx, ui_events));
 			});
 		});
-
-		state.mixer.remove_queue = remove_queue;
-		state.mixer.clean_channels();
 	}
 
 	fn as_any(&mut self) -> &mut dyn std::any::Any {
@@ -61,60 +67,101 @@ impl Window for MixerWindow {
 
 fn view_contents(
 	ui: &mut egui::Ui,
-	channel: &mut Channel,
+	channel: &Channel,
 	index: usize,
-	remove_queue: &mut Vec<usize>,
+	ui_events: &mut VecDeque<UiEvent>,
 ) {
-	ui.add(egui::TextEdit::singleline(&mut channel.name)
-		.desired_width(64.0)
-		.font(egui::TextStyle::Small)
-		.min_size(egui::Vec2::new(64.0, 12.0)));
+	let mut channel_name = channel.name.clone();
+	let mut channel_panning = channel.panning;
+	let mut channel_volume = channel.volume;
+	let mut channel_muted = channel.muted;
+
+	ui.add(
+		egui::TextEdit::singleline(&mut channel_name)
+			.desired_width(64.0)
+			.font(egui::TextStyle::Small)
+			.min_size(egui::Vec2::new(64.0, 12.0)),
+	);
 
 	// Panning
-	ui.add(egui_extras_xt::knobs::AudioKnob::new(&mut channel.panning)
-		.range(-1.0..=1.0)
-		.spread(0.75)
-		.drag_length(4.0)
-		.animated(false)
-		.shape(egui_extras_xt::common::WidgetShape::Circle));
+	ui.add(
+		egui_extras_xt::knobs::AudioKnob::new(&mut channel_panning)
+			.range(-1.0..=1.0)
+			.spread(0.75)
+			.drag_length(4.0)
+			.animated(false)
+			.shape(egui_extras_xt::common::WidgetShape::Circle),
+	);
 
-	let label = if channel.panning == 0.0 {
+	let label = if channel_panning == 0.0 {
 		""
-	} else if channel.panning > 0.0 {
+	} else if channel_panning > 0.0 {
 		"R"
 	} else {
 		"L"
 	};
 
-	ui.label(format!("{:.0}% {}", (channel.panning * 100.0).abs(), label));
+	ui.label(format!("{:.0}% {}", (channel_panning * 100.0).abs(), label));
 
 	// Volume
-	ui.add_enabled_ui(!channel.muted, |ui| {
+	ui.add_enabled_ui(!channel_muted, |ui| {
 		ui.horizontal(|ui| {
 			ui.allocate_space(egui::Vec2::splat(16.0));
-			ui.add(egui::Slider::new(&mut channel.volume, -30.0..=6.0)
-				.vertical()
-				.show_value(false))
-				.on_hover_text_at_pointer(format!("{:.1} dB", channel.volume));
+			ui.add(
+				egui::Slider::new(&mut channel_volume, -30.0..=6.0)
+					.vertical()
+					.show_value(false),
+			)
+			.on_hover_text_at_pointer(format!("{:.1} dB", channel_volume));
 		});
 	});
 
-	ui.toggle_value(&mut channel.muted, "M");
+	ui.toggle_value(&mut channel_muted, "M");
 
 	// First index is the master channel - let's not remove that!
 	if index > 0 {
 		if ui.button("❌").clicked() {
-			remove_queue.push(index);
+			ui_events.push_back(UiEvent::RemoveChannel {
+				channel_index: index,
+			});
 		}
+	}
+
+	if channel_name != channel.name {
+		ui_events.push_back(UiEvent::ChannelName {
+			channel_index: index,
+			name: channel_name,
+		});
+	}
+
+	if channel_panning != channel.panning {
+		ui_events.push_back(UiEvent::ChannelPanning {
+			channel_index: index,
+			panning: channel_panning,
+		});
+	}
+
+	if channel_volume != channel.volume {
+		ui_events.push_back(UiEvent::ChannelVolume {
+			channel_index: index,
+			volume: channel_volume,
+		});
+	}
+
+	if channel_muted != channel.muted {
+		ui_events.push_back(UiEvent::ChannelMuted {
+			channel_index: index,
+			muted: channel_muted,
+		});
 	}
 }
 
-fn view(ui: &mut egui::Ui, channel: &mut Channel, index: usize, remove_queue: &mut Vec<usize>) {
+fn view(ui: &mut egui::Ui, channel: &Channel, index: usize, ui_events: &mut VecDeque<UiEvent>) {
 	ui.group(|ui| {
 		ui.allocate_ui_with_layout(
 			egui::Vec2::new(64.0, 256.0),
 			egui::Layout::top_down_justified(egui::Align::Center),
-			|ui| view_contents(ui, channel, index, remove_queue),
+			|ui| view_contents(ui, channel, index, ui_events),
 		);
 	});
 }

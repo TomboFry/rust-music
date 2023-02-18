@@ -1,7 +1,10 @@
 use super::{SystemState, Window, WindowName};
-use crate::resources::strings;
+use crate::resources::{strings, UiEvent};
 use cpal::traits::DeviceTrait;
-use std::sync::{Arc, Mutex};
+use std::{
+	collections::VecDeque,
+	sync::{Arc, RwLock},
+};
 
 #[derive(Default)]
 pub struct SettingsWindow {}
@@ -12,17 +15,23 @@ impl Window for SettingsWindow {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &mut Arc<Mutex<SystemState>>,
+		state: &Arc<RwLock<SystemState>>,
+		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)
-			.show(ctx, |ui| self.ui(ui, state));
+			.show(ctx, |ui| self.ui(ui, state, ui_events));
 	}
 
-	fn ui(&mut self, ui: &mut egui::Ui, state: &mut Arc<Mutex<SystemState>>) {
-		let state = &mut state.lock().unwrap();
+	fn ui(
+		&mut self,
+		ui: &mut egui::Ui,
+		state: &Arc<RwLock<SystemState>>,
+		ui_events: &mut VecDeque<UiEvent>,
+	) {
+		let state = &mut state.read().unwrap();
 		let mut output_changed: Option<usize> = None;
 		let mut input_changed: Option<usize> = None;
 		let mut sample_rate = state.audio.output_sample_rate;
@@ -32,14 +41,8 @@ impl Window for SettingsWindow {
 			.width(160.0)
 			.selected_text(state.audio.get_device_output_name())
 			.show_ui(ui, |ui| {
-				for (index, device) in
-					state.audio.available_outputs.iter().enumerate()
-				{
-					ui.selectable_value(
-						&mut output_changed,
-						Some(index),
-						device.name().unwrap(),
-					);
+				for (index, device) in state.audio.available_outputs.iter().enumerate() {
+					ui.selectable_value(&mut output_changed, Some(index), device.name().unwrap());
 				}
 			});
 
@@ -50,14 +53,8 @@ impl Window for SettingsWindow {
 			.width(160.0)
 			.selected_text(state.audio.get_device_input_name())
 			.show_ui(ui, |ui| {
-				for (index, device) in
-					state.audio.available_inputs.iter().enumerate()
-				{
-					ui.selectable_value(
-						&mut input_changed,
-						Some(index),
-						device.name().unwrap(),
-					);
+				for (index, device) in state.audio.available_inputs.iter().enumerate() {
+					ui.selectable_value(&mut input_changed, Some(index), device.name().unwrap());
 				}
 			});
 
@@ -75,15 +72,16 @@ impl Window for SettingsWindow {
 			ui.add(drag_value);
 		});
 
-		state.audio.output_sample_rate = sample_rate;
+		if sample_rate != state.audio.output_sample_rate {
+			ui_events.push_back(UiEvent::OutputDeviceSampleRate(sample_rate));
+		}
 
 		if let Some(output_index) = output_changed {
-			state.audio.active_output_index = output_index;
-			state.audio.update_output_config();
+			ui_events.push_back(UiEvent::OutputDevice(output_index));
 		}
 
 		if let Some(input_index) = input_changed {
-			state.audio.active_input_index = input_index;
+			ui_events.push_back(UiEvent::InputDevice(input_index));
 		}
 	}
 

@@ -28,6 +28,7 @@ pub struct AudioSettings {
 	pub active_input_index: usize,
 	pub active_output_index: usize,
 	pub output_sample_rate: u32,
+	pub output_channels: u32,
 	pub output_config_range: Option<cpal::SupportedStreamConfigRange>,
 	pub upd_tx: Producer<AudioEngineEvent>,
 }
@@ -49,11 +50,12 @@ impl AudioSettings {
 			available_inputs: devices.input_list,
 			available_outputs: devices.output_list,
 			output_sample_rate: 48000,
+			output_channels: 2,
 			output_config_range: None,
 			upd_tx,
 		};
 
-		settings.update_output_config();
+		settings.update_output_config(active_output_index);
 		// settings.update_input_config();
 
 		settings
@@ -85,7 +87,9 @@ impl AudioSettings {
 			.unwrap()
 	}
 
-	pub fn update_output_config(&mut self) {
+	pub fn update_output_config(&mut self, device_index: usize) {
+		self.active_output_index = device_index;
+
 		// TODO: Better error handling
 		let config = self.available_outputs[self.active_output_index]
 			.supported_output_configs()
@@ -117,6 +121,7 @@ impl AudioSettings {
 		self.upd_tx
 			.push(AudioEngineEvent::Enable {
 				device_index: self.active_output_index,
+				channels: self.output_channels,
 				config: final_config,
 				buffer_size,
 			})
