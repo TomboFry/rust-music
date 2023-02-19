@@ -53,5 +53,7 @@ impl eframe::App for System {
 			.windows(ctx, &self.project, &mut self.system, &mut self.ui_events);
 
 		ui_event_handler(&mut self.project, &mut self.ui_events);
+
+		ctx.request_repaint();
 	}
 }

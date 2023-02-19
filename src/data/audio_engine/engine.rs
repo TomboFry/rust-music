@@ -1,9 +1,6 @@
 use super::AudioEngineEvent;
 use crate::data::Project;
-use cpal::{
-	traits::{DeviceTrait, HostTrait, StreamTrait},
-	Sample,
-};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use rtrb::Consumer;
 use std::{
 	sync::{Arc, RwLock},
