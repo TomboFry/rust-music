@@ -1,4 +1,4 @@
-use super::{main_menu::draw_application_menu, Windows};
+use super::{main_menu::draw_application_menu, windows::Windows};
 use crate::{
 	data::{ui_event_handler, AudioEngine, Project, SystemState},
 	resources::assets::setup_custom_fonts,

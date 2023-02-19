@@ -1,8 +1,7 @@
-use super::WindowName;
+use super::{Window, WindowName};
 use crate::{
-	data::{AudioFile, Project, SystemState},
-	resources::{strings, PlayState, UiEvent},
-	windows::Window,
+	data::{AudioFile, Project, SystemState, UiEvent},
+	resources::{strings, PlayState},
 };
 use std::{
 	sync::{Arc, RwLock},

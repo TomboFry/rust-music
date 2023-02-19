@@ -1,8 +1,7 @@
-use std::collections::VecDeque;
-
 use super::{AudioEngineEvent, AudioSettings};
-use crate::resources::UiEvent;
+use crate::data::UiEvent;
 use rtrb::Producer;
+use std::collections::VecDeque;
 
 pub struct SystemState {
 	pub audio: AudioSettings,

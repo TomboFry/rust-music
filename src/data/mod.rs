@@ -13,5 +13,5 @@ pub use sampler::*;
 mod audio_engine;
 pub use audio_engine::*;
 
-mod ui_event_handler;
-pub use ui_event_handler::*;
+mod ui_event;
+pub use ui_event::*;

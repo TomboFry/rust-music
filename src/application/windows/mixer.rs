@@ -1,7 +1,7 @@
+use super::{Window, WindowName};
 use crate::{
-	data::{Channel, Project, SystemState},
-	resources::{strings, UiEvent},
-	windows::{Window, WindowName},
+	data::{Channel, Project, SystemState, UiEvent},
+	resources::strings,
 };
 use std::sync::{Arc, RwLock};
 

@@ -1,5 +1,5 @@
-use super::Project;
-use crate::resources::UiEvent;
+use super::UiEvent;
+use crate::data::Project;
 use std::{
 	collections::VecDeque,
 	sync::{Arc, RwLock},

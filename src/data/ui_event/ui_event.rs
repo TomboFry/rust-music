@@ -1,4 +1,4 @@
-use super::{PlayState, Progress};
+use crate::resources::{PlayState, Progress};
 use std::path::PathBuf;
 use std::time::Duration;
 

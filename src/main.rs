@@ -1,12 +1,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use crate::windows::System;
+use crate::application::System;
 use resources::strings;
 
+mod application;
 mod data;
 mod resources;
 mod utilities;
-mod windows;
 
 pub fn main() -> Result<(), eframe::Error> {
 	let options = eframe::NativeOptions {

@@ -1,9 +1,9 @@
-use super::{WindowName, Windows};
+use super::windows::{WindowName, Windows};
 use crate::{
 	data::SystemState,
+	data::{Project, UiEvent},
 	resources::strings,
 	utilities::format::format_play_state,
-	{data::Project, resources::UiEvent},
 };
 use egui::{Context, Layout, Modifiers, Ui};
 use egui_extras_xt::displays::{

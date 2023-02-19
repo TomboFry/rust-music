@@ -9,10 +9,6 @@ use std::{
 };
 use strum::{AsRefStr, Display, EnumIter};
 
-pub use application::*;
-
-mod application;
-pub mod main_menu;
 pub mod mixer;
 pub mod sampler;
 pub mod settings;
@@ -49,8 +45,8 @@ pub trait Window {
 type WindowMap = BTreeMap<WindowName, Box<dyn Window>>;
 
 pub struct Windows {
-	windows: WindowMap,
-	open: BTreeSet<WindowName>,
+	pub windows: WindowMap,
+	pub open: BTreeSet<WindowName>,
 }
 
 impl Default for Windows {
