@@ -5,14 +5,16 @@ use rtrb::Consumer;
 use std::{
 	sync::{Arc, RwLock},
 	thread::{self, JoinHandle},
-	time::Duration,
+	time::{Duration, Instant},
 };
 
 #[derive(Copy, Clone)]
-struct EngineConfig {
+pub struct EngineConfig {
 	pub sample_rate: f64,
 	pub channels: usize,
 	pub timer: f64,
+	pub real_buffer_size: Option<usize>,
+	pub buffer_start: Instant,
 }
 
 pub struct AudioEngine {
@@ -83,11 +85,11 @@ impl AudioEngine {
 			.unwrap()
 			.collect::<Vec<cpal::Device>>()[device_index];
 
-		println!("{} {}", device.name().unwrap(), config.sample_format());
+		println!("{} ({})", device.name().unwrap(), config.sample_format());
 
 		let build_config = cpal::StreamConfig {
 			buffer_size: cpal::BufferSize::Fixed(buffer_size),
-			channels: config.channels(),
+			channels: 2, // TODO: Support less or more than 2 channels? How would the mixer work?
 			sample_rate: config.sample_rate(),
 		};
 
@@ -95,6 +97,8 @@ impl AudioEngine {
 			sample_rate: config.sample_rate().0 as f64,
 			channels: config.channels() as usize,
 			timer: 0.0,
+			real_buffer_size: None,
+			buffer_start: Instant::now(),
 		};
 
 		let err_fn = move |err| eprintln!("{err}");
@@ -117,30 +121,27 @@ impl AudioEngine {
 
 	/// Process all synths, effects, and mixer channels.
 	/// TODO: Implement! Get audio based on project play state (eg. "Playing", "Stopped", etc).
-	fn process_audio<T: cpal::Sample + cpal::FromSample<f64>>(
+	fn process_audio<T: cpal::Sample + cpal::FromSample<f64> + std::ops::Add<Output = T>>(
 		data: &mut [T],
-		_info: &cpal::OutputCallbackInfo,
+		info: &cpal::OutputCallbackInfo,
 		project: &Arc<RwLock<Project>>,
 		config: &mut EngineConfig,
 	) {
+		config.buffer_start = Instant::now();
 		let project = project.read().unwrap();
 
-		// Frame is slice containing both left and right samples
-		for frame in data.chunks_mut(config.channels) {
-			// Generate a sine wave based on the master channel volume and panning
-			let volume = (project.mixer.channels[0].volume).clamp(0.0, 100.0) / 100.0;
-			let pan = (project.mixer.channels[0].panning as f64 + 0.5) * 8.0;
+		// config.sample_rate = data.len() as f64 * 50.0;
+		if config.real_buffer_size.is_none() {
+			config.real_buffer_size = Some(data.len());
+		}
 
-			let tau = std::f64::consts::TAU;
-			let sine = ((config.timer * pan * 440.0 * tau) / config.sample_rate).sin();
-			let val = T::from_sample(sine * volume);
+		let mix =
+			project
+				.mixer
+				.render_buffer(&project, config.real_buffer_size.unwrap(), info, config);
 
-			// Increase the timer
-			config.timer = (config.timer + 1.0) % config.sample_rate;
-
-			for sample in frame.iter_mut() {
-				*sample = val;
-			}
+		for (index, sample) in data.iter_mut().enumerate() {
+			*sample = T::from_sample(mix[index]);
 		}
 	}
 }

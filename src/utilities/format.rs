@@ -12,13 +12,15 @@ pub fn format_duration(duration: &Duration) -> String {
 	)
 }
 
-pub fn duration_since_play_state(play_state: &PlayState) -> Duration {
+pub fn duration_since_play_state(play_state: &PlayState, time: Option<Instant>) -> Duration {
 	match play_state {
-		PlayState::Playing { start_time } => Instant::now().duration_since(*start_time),
+		PlayState::Playing { start_time } => {
+			time.unwrap_or(Instant::now()).duration_since(*start_time)
+		}
 		_ => Duration::ZERO,
 	}
 }
 
 pub fn format_play_state(play_state: &PlayState) -> String {
-	format_duration(&duration_since_play_state(&play_state))
+	format_duration(&duration_since_play_state(&play_state, None))
 }
