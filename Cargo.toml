@@ -19,4 +19,6 @@ cpal = "0.15.0"
 strum = { version = "0.24.1" }
 rand = "0.8.5"
 rtrb = "0.2.3"
+vst = "0.3.0"
+rayon = "1.6.1"
 # egui_extras_xt = { path = "../egui_extras_xt/egui_extras_xt", version="0.1.0", features = ["knobs", "displays"] }

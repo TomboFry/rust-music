@@ -20,3 +20,8 @@ pub const FILE_PICKER_AUDIO_NAME: &'static str = "Audio files (*.mp3, *.wav, *.f
 pub const FILE_PICKER_AUDIO_EXTENSIONS: &[&'static str] = &["mp3", "flac", "wav", "opus"];
 
 pub const SAMPLER_ADD_LABEL: &'static str = "Add Audio Files";
+
+pub const VST_PATHS: [&'static str; 2] = [
+	"C:\\Program Files (x86)\\VstPlugins",
+	"C:\\Program Files (x86)\\Steinberg\\VSTPlugins",
+];

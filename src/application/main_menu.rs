@@ -33,11 +33,13 @@ pub fn draw_application_menu(
 				let mut project_time_signature_denominator = project.time_signature_denominator;
 
 				// Menu Buttons
-				menu_set_button_style(ui);
-				file_button(ui, frame);
-				add_button(ui, system);
-				view_button(ui, windows);
-				ui.reset_style();
+				ui.scope(|ui| {
+					menu_set_button_style(ui);
+
+					file_button(ui, frame);
+					add_button(ui, system);
+					view_button(ui, windows);
+				});
 
 				// Project Toolbar
 				ui.separator();
