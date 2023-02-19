@@ -5,7 +5,6 @@ use crate::{
 	windows::Window,
 };
 use std::{
-	collections::VecDeque,
 	sync::{Arc, RwLock},
 	time::Instant,
 };
@@ -21,28 +20,21 @@ impl Window for SamplerWindow {
 		open: &mut bool,
 		state: &Arc<RwLock<Project>>,
 		system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)
-			.show(ctx, |ui| self.ui(ui, state, system, ui_events));
+			.show(ctx, |ui| self.ui(ui, state, system));
 	}
 
-	fn ui(
-		&mut self,
-		ui: &mut egui::Ui,
-		state: &Arc<RwLock<Project>>,
-		_system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
-	) {
+	fn ui(&mut self, ui: &mut egui::Ui, state: &Arc<RwLock<Project>>, system: &mut SystemState) {
 		let state = &mut state.read().unwrap();
 		let channel_len = state.mixer.channels.len() - 1;
 
 		if ui.button(strings::SAMPLER_ADD_LABEL).clicked() {
 			// TODO: Load samples asynchronously
-			// ui_events.push_back(UiEvent::AddSample { path: () });
+			// system.add_ui_event(UiEvent::AddSample { path: () });
 		}
 
 		egui::ScrollArea::vertical().show(ui, |ui| {
@@ -52,13 +44,9 @@ impl Window for SamplerWindow {
 				.iter()
 				.enumerate()
 				.for_each(|(index, file)| {
-					ui.horizontal(|ui| ui_sample(file, index, channel_len, ui, ui_events));
+					ui.horizontal(|ui| ui_sample(file, index, channel_len, ui, system));
 				});
 		});
-	}
-
-	fn as_any(&mut self) -> &mut dyn std::any::Any {
-		self
 	}
 
 	fn toggle_shortcut(&self) -> Option<egui::KeyboardShortcut> {
@@ -74,7 +62,7 @@ fn ui_sample(
 	index: usize,
 	channel_len: usize,
 	ui: &mut egui::Ui,
-	ui_events: &mut VecDeque<UiEvent>,
+	system: &mut SystemState,
 ) {
 	let file_name = file.path.file_name().unwrap().to_str().unwrap();
 	let full_path = file.path.as_os_str().to_str().unwrap();
@@ -90,8 +78,8 @@ fn ui_sample(
 		_ => false,
 	};
 
-	let label = if is_playing { "⏹" } else { "▶" };
-	if ui.button(label).clicked() {
+	let text = if is_playing { "⏹" } else { "▶" };
+	if ui.button(text).clicked() {
 		if is_playing {
 			file_play_state = PlayState::Stopped;
 		} else {
@@ -102,7 +90,7 @@ fn ui_sample(
 	}
 
 	if ui.button("❌").clicked() {
-		ui_events.push_back(UiEvent::RemoveSample {
+		system.dispatch(UiEvent::RemoveSample {
 			sample_index: index,
 		});
 	}
@@ -110,14 +98,14 @@ fn ui_sample(
 	ui.label(file_name).on_hover_text(full_path);
 
 	if file_channel != file.channel {
-		ui_events.push_back(UiEvent::SampleChannel {
+		system.dispatch(UiEvent::SampleChannel {
 			sample_index: index,
 			channel_index: file_channel,
 		});
 	}
 
 	if file_play_state != file.play_state {
-		ui_events.push_back(UiEvent::PlayPauseSample {
+		system.dispatch(UiEvent::PlayPauseSample {
 			sample_index: index,
 			play_state: file_play_state,
 		});

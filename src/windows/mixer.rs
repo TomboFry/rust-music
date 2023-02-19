@@ -3,10 +3,7 @@ use crate::{
 	resources::{strings, UiEvent},
 	windows::{Window, WindowName},
 };
-use std::{
-	collections::VecDeque,
-	sync::{Arc, RwLock},
-};
+use std::sync::{Arc, RwLock};
 
 #[derive(Default)]
 pub struct MixerWindow {}
@@ -19,27 +16,20 @@ impl Window for MixerWindow {
 		open: &mut bool,
 		state: &Arc<RwLock<Project>>,
 		system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.resizable(true)
 			.collapsible(false)
 			.default_width(640.0)
-			.show(ctx, |ui| self.ui(ui, state, system, ui_events));
+			.show(ctx, |ui| self.ui(ui, state, system));
 	}
 
-	fn ui(
-		&mut self,
-		ui: &mut egui::Ui,
-		state: &Arc<RwLock<Project>>,
-		_system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
-	) {
+	fn ui(&mut self, ui: &mut egui::Ui, state: &Arc<RwLock<Project>>, system: &mut SystemState) {
 		let state = state.read().unwrap();
 		egui::TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
-				ui_events.push_back(UiEvent::AddChannel);
+				system.dispatch(UiEvent::AddChannel);
 			}
 		});
 
@@ -50,13 +40,9 @@ impl Window for MixerWindow {
 					.channels
 					.iter()
 					.enumerate()
-					.for_each(|(idx, c)| view(ui, c, idx, ui_events));
+					.for_each(|(idx, c)| view(ui, c, idx, system));
 			});
 		});
-	}
-
-	fn as_any(&mut self) -> &mut dyn std::any::Any {
-		self
 	}
 
 	fn toggle_shortcut(&self) -> Option<egui::KeyboardShortcut> {
@@ -67,12 +53,7 @@ impl Window for MixerWindow {
 	}
 }
 
-fn view_contents(
-	ui: &mut egui::Ui,
-	channel: &Channel,
-	index: usize,
-	ui_events: &mut VecDeque<UiEvent>,
-) {
+fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mut SystemState) {
 	let mut channel_name = channel.name.clone();
 	let mut channel_panning = channel.panning;
 	let mut channel_volume = channel.volume;
@@ -124,47 +105,47 @@ fn view_contents(
 	// First index is the master channel - let's not remove that!
 	if index > 0 {
 		if ui.button("❌").clicked() {
-			ui_events.push_back(UiEvent::RemoveChannel {
+			system.dispatch(UiEvent::RemoveChannel {
 				channel_index: index,
 			});
 		}
 	}
 
 	if channel_name != channel.name {
-		ui_events.push_back(UiEvent::ChannelName {
+		system.dispatch(UiEvent::ChannelName {
 			channel_index: index,
 			name: channel_name,
 		});
 	}
 
 	if channel_panning != channel.panning {
-		ui_events.push_back(UiEvent::ChannelPanning {
+		system.dispatch(UiEvent::ChannelPanning {
 			channel_index: index,
 			panning: channel_panning,
 		});
 	}
 
 	if channel_volume != channel.volume {
-		ui_events.push_back(UiEvent::ChannelVolume {
+		system.dispatch(UiEvent::ChannelVolume {
 			channel_index: index,
 			volume: channel_volume,
 		});
 	}
 
 	if channel_muted != channel.muted {
-		ui_events.push_back(UiEvent::ChannelMuted {
+		system.dispatch(UiEvent::ChannelMuted {
 			channel_index: index,
 			muted: channel_muted,
 		});
 	}
 }
 
-fn view(ui: &mut egui::Ui, channel: &Channel, index: usize, ui_events: &mut VecDeque<UiEvent>) {
+fn view(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mut SystemState) {
 	ui.group(|ui| {
 		ui.allocate_ui_with_layout(
 			egui::Vec2::new(64.0, 256.0),
 			egui::Layout::top_down_justified(egui::Align::Center),
-			|ui| view_contents(ui, channel, index, ui_events),
+			|ui| view_contents(ui, channel, index, system),
 		);
 	});
 }

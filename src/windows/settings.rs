@@ -1,13 +1,7 @@
 use super::{Project, Window, WindowName};
-use crate::{
-	data::SystemState,
-	resources::{strings, UiEvent},
-};
+use crate::{data::SystemState, resources::strings};
 use cpal::traits::DeviceTrait;
-use std::{
-	collections::VecDeque,
-	sync::{Arc, RwLock},
-};
+use std::sync::{Arc, RwLock};
 
 #[derive(Default)]
 pub struct SettingsWindow {}
@@ -20,22 +14,15 @@ impl Window for SettingsWindow {
 		open: &mut bool,
 		state: &Arc<RwLock<Project>>,
 		system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)
-			.show(ctx, |ui| self.ui(ui, state, system, ui_events));
+			.show(ctx, |ui| self.ui(ui, state, system));
 	}
 
-	fn ui(
-		&mut self,
-		ui: &mut egui::Ui,
-		_state: &Arc<RwLock<Project>>,
-		system: &mut SystemState,
-		_ui_events: &mut VecDeque<UiEvent>,
-	) {
+	fn ui(&mut self, ui: &mut egui::Ui, _state: &Arc<RwLock<Project>>, system: &mut SystemState) {
 		let mut output_index = system.audio.active_output_index;
 		let mut input_changed: Option<usize> = None;
 		let mut sample_rate = system.audio.output_sample_rate;
@@ -84,10 +71,6 @@ impl Window for SettingsWindow {
 		if output_index != system.audio.active_output_index {
 			system.audio.update_output_config(output_index);
 		}
-	}
-
-	fn as_any(&mut self) -> &mut dyn std::any::Any {
-		self
 	}
 
 	fn toggle_shortcut(&self) -> Option<egui::KeyboardShortcut> {

@@ -1,11 +1,10 @@
 use self::{mixer::MixerWindow, sampler::SamplerWindow, settings::SettingsWindow};
 use crate::{
 	data::{Project, SystemState},
-	resources::{strings, UiEvent},
+	resources::strings,
 };
 use std::{
-	any::Any,
-	collections::{BTreeMap, BTreeSet, VecDeque},
+	collections::{BTreeMap, BTreeSet},
 	sync::{Arc, RwLock},
 };
 use strum::{AsRefStr, Display, EnumIter};
@@ -39,19 +38,10 @@ pub trait Window {
 		open: &mut bool,
 		state: &Arc<RwLock<Project>>,
 		system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
 	);
 
 	/// Display GUI inside window
-	fn ui(
-		&mut self,
-		ui: &mut egui::Ui,
-		state: &Arc<RwLock<Project>>,
-		system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
-	);
-
-	fn as_any(&mut self) -> &mut dyn Any;
+	fn ui(&mut self, ui: &mut egui::Ui, state: &Arc<RwLock<Project>>, system: &mut SystemState);
 
 	fn toggle_shortcut(&self) -> Option<egui::KeyboardShortcut>;
 }
@@ -103,14 +93,13 @@ impl Windows {
 		ctx: &egui::Context,
 		state: &Arc<RwLock<Project>>,
 		system: &mut SystemState,
-		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		let Self { windows, open } = self;
 		for (name, window) in windows {
 			let mut is_open = open.contains(name);
 
 			// Display Window
-			window.show(ctx, name, &mut is_open, state, system, ui_events);
+			window.show(ctx, name, &mut is_open, state, system);
 			Windows::set_open(open, name, is_open);
 
 			// Handle toggle shortcuts

@@ -1,12 +1,14 @@
 use super::{WindowName, Windows};
-use crate::resources::strings;
-use crate::utilities::format::format_play_state;
-use crate::{data::Project, resources::UiEvent};
+use crate::{
+	data::SystemState,
+	resources::strings,
+	utilities::format::format_play_state,
+	{data::Project, resources::UiEvent},
+};
 use egui::{Context, Layout, Modifiers, Ui};
 use egui_extras_xt::displays::{
 	DisplayKind, DisplayMetrics, DisplayStylePreset, SegmentedDisplayWidget,
 };
-use std::collections::VecDeque;
 use std::sync::{Arc, RwLock};
 use strum::IntoEnumIterator;
 
@@ -14,8 +16,8 @@ pub fn draw_application_menu(
 	ctx: &Context,
 	frame: &mut eframe::Frame,
 	windows: &mut Windows,
+	system: &mut SystemState,
 	state: &Arc<RwLock<Project>>,
-	ui_events: &mut VecDeque<UiEvent>,
 ) {
 	egui::TopBottomPanel::top("application-menu-bar").show(ctx, |ui| {
 		ui.with_layout(
@@ -33,7 +35,7 @@ pub fn draw_application_menu(
 				// Menu Buttons
 				menu_set_button_style(ui);
 				file_button(ui, frame);
-				add_button(ui, ui_events);
+				add_button(ui, system);
 				view_button(ui, windows);
 				ui.reset_style();
 
@@ -78,17 +80,17 @@ pub fn draw_application_menu(
 
 				// TODO: Is there a nicer way to do this?
 				if project_tempo != project.tempo {
-					ui_events.push_back(UiEvent::ProjectTempo(project_tempo));
+					system.dispatch(UiEvent::ProjectTempo(project_tempo));
 				}
 
 				if project_time_signature_numerator != project.time_signature_numerator {
-					ui_events.push_back(UiEvent::ProjectTimeSignatureNumerator(
+					system.dispatch(UiEvent::ProjectTimeSignatureNumerator(
 						project_time_signature_numerator,
 					));
 				}
 
 				if project_time_signature_denominator != project.time_signature_denominator {
-					ui_events.push_back(UiEvent::ProjectTimeSignatureDenominator(
+					system.dispatch(UiEvent::ProjectTimeSignatureDenominator(
 						project_time_signature_denominator,
 					));
 				}
@@ -127,18 +129,18 @@ fn file_button(ui: &mut Ui, frame: &mut eframe::Frame) {
 	});
 }
 
-fn add_button(ui: &mut Ui, ui_events: &mut VecDeque<UiEvent>) {
+fn add_button(ui: &mut Ui, system: &mut SystemState) {
 	ui.menu_button(strings::MENU_LABEL_ADD, |ui| {
 		ui.set_min_width(200.0);
 		ui.style_mut().wrap = Some(false);
 
 		if ui.add(egui::Button::new("Channel")).clicked() {
-			ui_events.push_back(UiEvent::AddChannel);
+			system.dispatch(UiEvent::AddChannel);
 			ui.close_menu();
 		}
 
 		if ui.add(egui::Button::new("Sample(s)")).clicked() {
-			// ui_events.push_back(UiEvent::AddSample { path: () });
+			// system.add_ui_event(UiEvent::AddSample { path: () });
 			ui.close_menu();
 		}
 	});
