@@ -12,6 +12,7 @@ use strum::IntoEnumIterator;
 
 pub fn draw_application_menu(
 	ctx: &Context,
+	frame: &mut eframe::Frame,
 	windows: &mut Windows,
 	state: &Arc<RwLock<Project>>,
 	ui_events: &mut VecDeque<UiEvent>,
@@ -31,7 +32,7 @@ pub fn draw_application_menu(
 
 				// Menu Buttons
 				menu_set_button_style(ui);
-				file_button(ui);
+				file_button(ui, frame);
 				add_button(ui, ui_events);
 				view_button(ui, windows);
 				ui.reset_style();
@@ -105,11 +106,11 @@ fn menu_set_button_style(ui: &mut Ui) {
 	style.visuals.widgets.inactive.bg_stroke = egui::Stroke::NONE;
 }
 
-fn file_button(ui: &mut Ui) {
+fn file_button(ui: &mut Ui, frame: &mut eframe::Frame) {
 	let quit_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::Q);
 
 	if ui.input_mut(|i| i.consume_shortcut(&quit_shortcut)) {
-		std::process::exit(0);
+		frame.close();
 	}
 
 	ui.menu_button(strings::MENU_LABEL_FILE, |ui| {
@@ -121,7 +122,7 @@ fn file_button(ui: &mut Ui) {
 			.clicked()
 		{
 			ui.close_menu();
-			std::process::exit(0);
+			frame.close();
 		}
 	});
 }

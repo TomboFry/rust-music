@@ -42,8 +42,14 @@ impl System {
 }
 
 impl eframe::App for System {
-	fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-		draw_application_menu(ctx, &mut self.windows, &self.project, &mut self.ui_events);
+	fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+		draw_application_menu(
+			ctx,
+			frame,
+			&mut self.windows,
+			&self.project,
+			&mut self.ui_events,
+		);
 
 		// TODO: Replace with rectangle to display custom colour or image
 		egui::panel::CentralPanel::default().show(ctx, |_| {});
