@@ -1,6 +1,29 @@
 # Development Progress
 
-## 2023-02-16
+## 2023-02-18 - GUI Events and State Restructure
+
+As previously mentioned below, I have implemented a `UIEvent` queue, which
+allows the front end to amass all potential changes and write to the state once
+at the end of every cycle, if even necessary. This _vastly_ reduces the number
+of writes to the main project state, and allows for a much more performant audio
+engine (proof withstanding!). This was also achieved using `RwLock` instead of
+`Mutex`, so that the UI and audio engine can both _read_ from the project state
+at the same time, vastly reducing the number of potential lock collisions
+between threads. Huzzah!
+
+Rather than use white noise as a method of sound generation, I opted for a sine
+wave, which will allow me to better understand the sample data structure a
+little better. Currently, I've hacked together the master channel as a way to
+control the sine wave, using the volume as volume, and the left/right panning
+knob for pitch.
+
+Despite a lot of code changing internally, there'll still be no screenshots
+today as the UI has not changed a bit! However, now that the "hard work" is "out
+of the way" (meaning there's still a tonne of even more difficult work to
+complete), I expect new visual features to start cropping up left, right, and
+center!
+
+## 2023-02-16 - Ring Buffers and UI Events
 
 Boy oh boy am I in for a treat. Yes, the system "works" using the method I
 described below. I think it could definitely generate some sound from the mixer
@@ -20,7 +43,7 @@ larger enum. You could consider this the flux (or redux) pattern. I'm hoping
 that this will allow both the UI and Audio to have concurrent read-only access,
 and have the state update only when it needs to.
 
-## 2023-02-14
+## 2023-02-14 - Audio Streams
 
 I've successfully opened an audio stream! The first test was to output white
 noise, as that can be done with a single line of code (and silence isn't a good
@@ -71,7 +94,7 @@ truly mastered, so this is a good opportunity to git gud. I know I'll need and
 Arc and a Mutex at some point, I'm sure, but it's time to figure out why and
 how!
 
-## 2023-02-11
+## 2023-02-11 - GUI Polish (Already?!)
 
 ![](./2023-02-11.png)
 
@@ -85,7 +108,7 @@ actually switched or connected to yet!
 Tomorrow, I'm going to learn how to open audio streams and switch between them
 using the Settings window.
 
-## 2023-02-10
+## 2023-02-10 - Basic GUI Set Up!
 
 ![](./2023-02-10.gif)
 
