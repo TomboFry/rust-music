@@ -1,7 +1,7 @@
 use super::{WindowName, Windows};
 use crate::resources::strings;
-use crate::utilities::format::format_duration;
-use crate::{data::SystemState, resources::UiEvent};
+use crate::utilities::format::format_play_state;
+use crate::{data::Project, resources::UiEvent};
 use egui::{Context, Layout, Modifiers, Ui};
 use egui_extras_xt::displays::{
 	DisplayKind, DisplayMetrics, DisplayStylePreset, SegmentedDisplayWidget,
@@ -13,7 +13,7 @@ use strum::IntoEnumIterator;
 pub fn draw_application_menu(
 	ctx: &Context,
 	windows: &mut Windows,
-	state: &Arc<RwLock<SystemState>>,
+	state: &Arc<RwLock<Project>>,
 	ui_events: &mut VecDeque<UiEvent>,
 ) {
 	egui::TopBottomPanel::top("application-menu-bar").show(ctx, |ui| {
@@ -24,11 +24,10 @@ pub fn draw_application_menu(
 			)
 			.with_cross_justify(true),
 			|ui| {
-				let state = &state.read().unwrap();
-				let mut project_tempo = state.project.tempo;
-				let mut project_time_signature_numerator = state.project.time_signature_numerator;
-				let mut project_time_signature_denominator =
-					state.project.time_signature_denominator;
+				let project = &state.read().unwrap();
+				let mut project_tempo = project.tempo;
+				let mut project_time_signature_numerator = project.time_signature_numerator;
+				let mut project_time_signature_denominator = project.time_signature_denominator;
 
 				// Menu Buttons
 				menu_set_button_style(ui);
@@ -65,7 +64,7 @@ pub fn draw_application_menu(
 					SegmentedDisplayWidget::new(DisplayKind::SevenSegment)
 						.digit_height(24.0)
 						.style_preset(DisplayStylePreset::DeLoreanRed)
-						.push_string(format_duration(&state.project.song_position))
+						.push_string(format_play_state(&project.play_state))
 						.show_apostrophes(false)
 						.metrics(DisplayMetrics {
 							colon_separation: 0.4,
@@ -77,17 +76,17 @@ pub fn draw_application_menu(
 				);
 
 				// TODO: Is there a nicer way to do this?
-				if project_tempo != state.project.tempo {
+				if project_tempo != project.tempo {
 					ui_events.push_back(UiEvent::ProjectTempo(project_tempo));
 				}
 
-				if project_time_signature_numerator != state.project.time_signature_numerator {
+				if project_time_signature_numerator != project.time_signature_numerator {
 					ui_events.push_back(UiEvent::ProjectTimeSignatureNumerator(
 						project_time_signature_numerator,
 					));
 				}
 
-				if project_time_signature_denominator != state.project.time_signature_denominator {
+				if project_time_signature_denominator != project.time_signature_denominator {
 					ui_events.push_back(UiEvent::ProjectTimeSignatureDenominator(
 						project_time_signature_denominator,
 					));

@@ -1,6 +1,6 @@
 use self::{mixer::MixerWindow, sampler::SamplerWindow, settings::SettingsWindow};
 use crate::{
-	data::SystemState,
+	data::{Project, SystemState},
 	resources::{strings, UiEvent},
 };
 use std::{
@@ -37,7 +37,8 @@ pub trait Window {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &Arc<RwLock<SystemState>>,
+		state: &Arc<RwLock<Project>>,
+		system: &mut SystemState,
 		ui_events: &mut VecDeque<UiEvent>,
 	);
 
@@ -45,7 +46,8 @@ pub trait Window {
 	fn ui(
 		&mut self,
 		ui: &mut egui::Ui,
-		state: &Arc<RwLock<SystemState>>,
+		state: &Arc<RwLock<Project>>,
+		system: &mut SystemState,
 		ui_events: &mut VecDeque<UiEvent>,
 	);
 
@@ -99,7 +101,8 @@ impl Windows {
 	pub fn windows(
 		&mut self,
 		ctx: &egui::Context,
-		state: &Arc<RwLock<SystemState>>,
+		state: &Arc<RwLock<Project>>,
+		system: &mut SystemState,
 		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		let Self { windows, open } = self;
@@ -107,7 +110,7 @@ impl Windows {
 			let mut is_open = open.contains(name);
 
 			// Display Window
-			window.show(ctx, name, &mut is_open, state, ui_events);
+			window.show(ctx, name, &mut is_open, state, system, ui_events);
 			Windows::set_open(open, name, is_open);
 
 			// Handle toggle shortcuts

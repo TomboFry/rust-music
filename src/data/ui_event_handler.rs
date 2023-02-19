@@ -1,41 +1,35 @@
-use super::SystemState;
+use super::Project;
 use crate::resources::UiEvent;
 use std::{
 	collections::VecDeque,
 	sync::{Arc, RwLock},
 };
 
-pub fn ui_event_handler(state: &Arc<RwLock<SystemState>>, events: &mut VecDeque<UiEvent>) {
-	let mut state = state.write().unwrap();
-
-	if events.len() > 0 {
-		println!(
-			"{:?}: {} new events!",
-			std::time::Instant::now(),
-			events.len()
-		);
+pub fn ui_event_handler(state: &mut Arc<RwLock<Project>>, events: &mut VecDeque<UiEvent>) {
+	if events.len() == 0 {
+		return;
 	}
+
+	println!("{:?}", events);
+	let mut state = state.write().unwrap();
 
 	while let Some(event) = events.pop_front() {
 		match event {
 			// General Project
 			UiEvent::ProjectName(name) => {
-				state.project.name = name.to_string();
+				state.name = name.to_string();
 			}
 			UiEvent::ProjectTempo(tempo) => {
-				state.project.tempo = tempo;
+				state.tempo = tempo;
 			}
 			UiEvent::ProjectTimeSignatureNumerator(numerator) => {
-				state.project.time_signature_numerator = numerator;
+				state.time_signature_numerator = numerator;
 			}
 			UiEvent::ProjectTimeSignatureDenominator(denominator) => {
-				state.project.time_signature_denominator = denominator;
+				state.time_signature_denominator = denominator;
 			}
 			UiEvent::ProjectPlayState(play_state) => {
-				state.project.play_state = play_state;
-			}
-			UiEvent::ProjectSongPosition(song_position) => {
-				state.project.song_position = song_position;
+				state.play_state = play_state;
 			}
 
 			// Mixer
@@ -77,23 +71,6 @@ pub fn ui_event_handler(state: &Arc<RwLock<SystemState>>, events: &mut VecDeque<
 				state.sampler.files[sample_index].play_state = play_state;
 			}
 
-			// Settings
-			UiEvent::OutputDevice(device_index) => {
-				state.audio.update_output_config(device_index);
-			}
-			UiEvent::OutputDeviceSampleRate(sample_rate) => {
-				state.audio.output_sample_rate = sample_rate;
-
-				let device_index = state.audio.active_output_index;
-				state.audio.update_output_config(device_index);
-			}
-			UiEvent::OutputDeviceChannels(channels) => {
-				state.audio.output_channels = channels;
-
-				let device_index = state.audio.active_output_index;
-				state.audio.update_output_config(device_index);
-			}
-			// UiEvent::InputDevice(device_index) => state.audio.update_input_config(*device_index),
 			x => {
 				eprintln!("Unimplemented: {:#?}", x);
 			}

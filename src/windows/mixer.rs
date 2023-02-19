@@ -1,5 +1,5 @@
 use crate::{
-	data::{Channel, SystemState},
+	data::{Channel, Project, SystemState},
 	resources::{strings, UiEvent},
 	windows::{Window, WindowName},
 };
@@ -17,7 +17,8 @@ impl Window for MixerWindow {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &Arc<RwLock<SystemState>>,
+		state: &Arc<RwLock<Project>>,
+		system: &mut SystemState,
 		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		egui::Window::new(name.as_ref())
@@ -25,13 +26,14 @@ impl Window for MixerWindow {
 			.resizable(true)
 			.collapsible(false)
 			.default_width(640.0)
-			.show(ctx, |ui| self.ui(ui, state, ui_events));
+			.show(ctx, |ui| self.ui(ui, state, system, ui_events));
 	}
 
 	fn ui(
 		&mut self,
 		ui: &mut egui::Ui,
-		state: &Arc<RwLock<SystemState>>,
+		state: &Arc<RwLock<Project>>,
+		_system: &mut SystemState,
 		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		let state = state.read().unwrap();
@@ -108,7 +110,8 @@ fn view_contents(
 		ui.horizontal(|ui| {
 			ui.allocate_space(egui::Vec2::splat(16.0));
 			ui.add(
-				egui::Slider::new(&mut channel_volume, -30.0..=6.0)
+				egui::Slider::new(&mut channel_volume, 0.0..=100.0)
+					.smart_aim(false)
 					.vertical()
 					.show_value(false),
 			)

@@ -19,7 +19,7 @@ pub enum UiEvent {
 	},
 	ChannelVolume {
 		channel_index: usize,
-		volume: f32,
+		volume: f64,
 	},
 	ChannelPanning {
 		channel_index: usize,
@@ -53,10 +53,4 @@ pub enum UiEvent {
 		sample_index: usize,
 		play_state: PlayState,
 	},
-
-	// Settings
-	OutputDevice(usize),
-	OutputDeviceSampleRate(u32),
-	OutputDeviceChannels(u32),
-	InputDevice(usize),
 }

@@ -1,50 +1,42 @@
 use super::AudioEngineEvent;
-use crate::data::SystemState;
+use crate::data::Project;
 use cpal::{
-	traits::{DeviceTrait, StreamTrait},
+	traits::{DeviceTrait, HostTrait, StreamTrait},
 	Sample,
 };
-use rtrb::{Consumer, Producer, RingBuffer};
+use rtrb::Consumer;
 use std::{
-	sync::{Arc, Mutex},
-	thread,
-	time::{Duration, Instant},
+	sync::{Arc, RwLock},
+	thread::{self, JoinHandle},
+	time::Duration,
 };
 
-/// 2 seconds of stereo 192kHz audio.
-const MAX_SAMPLES: usize = 192000 * 2 * 2;
+#[derive(Copy, Clone)]
+struct EngineConfig {
+	pub sample_rate: f64,
+	pub channels: usize,
+	pub timer: f64,
+}
 
 pub struct AudioEngine {
-	pub active: bool,
-	pub buffer_size: u32,
-	pub sample_rate: usize,
-	pub stream: Option<cpal::Stream>,
+	stream: Option<cpal::Stream>,
 }
 
 impl AudioEngine {
-	pub fn new(
-		state: Arc<Mutex<SystemState>>,
+	pub fn init(
+		project: Arc<RwLock<Project>>,
 		mut event_rx: Consumer<AudioEngineEvent>,
-	) -> Self {
-		let mut engine = AudioEngine {
-			active: false,
-			buffer_size: 1024,
-			sample_rate: 48000,
-			stream: None,
-		};
-
+	) -> JoinHandle<()> {
 		thread::spawn(move || {
-			let (mut audio_tx, audio_rx) = RingBuffer::<f32>::new(MAX_SAMPLES);
-			let mut audio_rx = Some(audio_rx);
-			let mut timer = Instant::now();
-			let mut _stream: Option<cpal::Stream> = None;
+			println!("AudioEngine Thread Created!");
+			let mut engine = AudioEngine { stream: None };
 
 			loop {
 				if let Ok(upd) = event_rx.pop() {
 					match upd {
 						AudioEngineEvent::Disable => {
 							println!("Disabling engine");
-							engine.active = false;
+							engine.stream = None;
 						}
 						AudioEngineEvent::Enable {
 							buffer_size,
@@ -53,33 +45,20 @@ impl AudioEngine {
 						} => {
 							println!("Enabling engine");
 							println!(
-								"{:?} channels at {} Hz (buffer size: {})",
+								"{} channels at {} Hz (buffer size: {})",
 								config.channels(),
 								config.sample_rate().0,
 								buffer_size,
 							);
 
-							engine.active = true;
-							engine.buffer_size = buffer_size;
-							engine.sample_rate =
-								config.sample_rate().0 as usize;
-
-							let f = audio_rx.take();
-
-							_stream = AudioEngine::build_stream(
-								state.clone(),
-								f.unwrap(),
+							engine.stream = AudioEngine::build_stream(
 								config,
 								device_index,
 								buffer_size,
+								project.clone(),
 							);
 
-							println!(
-								"New buffer size: {}",
-								engine.buffer_size
-							);
-
-							if let Some(stream) = &_stream {
+							if let Some(stream) = &engine.stream {
 								stream.play().unwrap();
 								println!("Playing!");
 							} else {
@@ -89,73 +68,45 @@ impl AudioEngine {
 					}
 				}
 
-				let seconds = (engine.buffer_size as f64
-					/ engine.sample_rate as f64) * 0.9;
-				let target_instant = timer + Duration::from_secs_f64(seconds);
-
-				let sleep_duration = target_instant
-					.duration_since(timer)
-					.checked_sub(timer.elapsed());
-
-				if let Some(sleep_duration) = sleep_duration {
-					std::thread::sleep(sleep_duration);
-				} else {
-					eprintln!("Can't keep up! Consider increasing buffer size");
-				}
-
-				if engine.active == false {
-					continue;
-				}
-
-				// If not successful (due to GUI having access to state),
-				// try again
-				let mut attempts = 5;
-				let mut successful = false;
-				while successful == false && attempts > 0 {
-					std::thread::sleep(Duration::from_micros(10));
-					successful = AudioEngine::process_audio(
-						&mut audio_tx,
-						state.clone(),
-						engine.buffer_size,
-					)
-					.is_ok();
-					attempts -= 1;
-				}
-
-				if successful {
-					timer = Instant::now();
-				}
+				// TODO: Automatically wait for new events, rather than sleeping?
+				std::thread::sleep(Duration::from_millis(100));
 			}
-		});
-
-		engine
+		})
 	}
 
+	/// Create a new CPAL audio stream to handle project data
 	fn build_stream(
-		state: Arc<Mutex<SystemState>>,
-		mut consumer: Consumer<f32>,
 		config: cpal::SupportedStreamConfig,
 		device_index: usize,
 		buffer_size: u32,
+		project: Arc<RwLock<Project>>,
 	) -> Option<cpal::Stream> {
-		let state = state.lock().unwrap();
-		let device = &state.audio.available_outputs[device_index];
+		let device = &cpal::default_host()
+			.output_devices()
+			.unwrap()
+			.collect::<Vec<cpal::Device>>()[device_index];
 
 		println!("{} {}", device.name().unwrap(), config.sample_format());
 
-		let err_fn = move |err| eprintln!("{err}");
-
-		let final_config = cpal::StreamConfig {
+		let build_config = cpal::StreamConfig {
 			buffer_size: cpal::BufferSize::Fixed(buffer_size),
-			channels: 2,
+			channels: config.channels(),
 			sample_rate: config.sample_rate(),
 		};
 
+		let mut stream_config = EngineConfig {
+			sample_rate: config.sample_rate().0 as f64,
+			channels: config.channels() as usize,
+			timer: 0.0,
+		};
+
+		let err_fn = move |err| eprintln!("{err}");
+
 		match config.sample_format() {
 			cpal::SampleFormat::F32 => device.build_output_stream(
-				&final_config,
+				&build_config,
 				move |data: &mut [f32], info: &cpal::OutputCallbackInfo| {
-					AudioEngine::stream_fn::<f32>(data, info, &mut consumer);
+					AudioEngine::process_audio::<f32>(data, info, &project, &mut stream_config);
 				},
 				err_fn,
 				None,
@@ -167,73 +118,32 @@ impl AudioEngine {
 		.ok()
 	}
 
-	fn stream_fn<T: cpal::Sample + cpal::FromSample<f32>>(
+	/// Process all synths, effects, and mixer channels.
+	/// TODO: Implement! Get audio based on project play state (eg. "Playing", "Stopped", etc).
+	fn process_audio<T: cpal::Sample + cpal::FromSample<f64>>(
 		data: &mut [T],
-		_: &cpal::OutputCallbackInfo,
-		consumer: &mut Consumer<f32>,
+		_info: &cpal::OutputCallbackInfo,
+		project: &Arc<RwLock<Project>>,
+		config: &mut EngineConfig,
 	) {
-		// println!("Trying to lock consumer");
-		// let mut consumer = consumer.lock().unwrap();
+		let project = project.read().unwrap();
 
-		// Output as many samples as possible
-		let size = data.len().min(consumer.slots());
+		// Frame is slice containing both left and right samples
+		for frame in data.chunks_mut(config.channels) {
+			// Generate a sine wave based on the master channel volume and panning
+			let volume = (project.mixer.channels[0].volume).clamp(0.0, 100.0) / 100.0;
+			let pan = (project.mixer.channels[0].panning as f64 + 0.5) * 8.0;
 
-		if size < data.len() {
-			println!("Buffer underrun! ({} < {})", size, data.len());
-		}
+			let tau = std::f64::consts::TAU;
+			let sine = ((config.timer * pan * 440.0 * tau) / config.sample_rate).sin();
+			let val = T::from_sample(sine * volume);
 
-		if size == 0 {
-			return;
-		}
+			// Increase the timer
+			config.timer = (config.timer + 1.0) % config.sample_rate;
 
-		let chunk = consumer.read_chunk(size).unwrap();
-
-		// Two slices, used if ring buffer wraps around
-		let (buffer, _) = chunk.as_slices();
-		let mut index = 0;
-
-		// println!("debug: {}, {}", size, d.len());
-
-		for sample in data {
-			if index >= buffer.len() - 1 {
-				break;
+			for sample in frame.iter_mut() {
+				*sample = val;
 			}
-
-			*sample = buffer[index].to_sample::<T>();
-			index += 1;
 		}
-
-		// We're done with this data
-		chunk.commit(size);
-	}
-
-	pub fn process_audio(
-		producer: &mut Producer<f32>,
-		state: Arc<Mutex<SystemState>>,
-		buffer_size: u32,
-	) -> Result<(), ()> {
-		let state = state.try_lock();
-		if state.is_err() {
-			eprintln!("...");
-			return Err(());
-		}
-
-		// let state = state.unwrap();
-
-		println!("{}", producer.slots());
-
-		let mut chunk = producer.write_chunk(buffer_size as usize * 2).unwrap();
-		let (a, _) = chunk.as_mut_slices();
-
-		// Generate silence
-		// a.fill(0.0);
-
-		for sample in a {
-			*sample = (rand::random::<f32>() * 0.25) - 0.125;
-		}
-
-		chunk.commit_all();
-
-		Ok(())
 	}
 }

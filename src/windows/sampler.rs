@@ -1,6 +1,6 @@
 use super::WindowName;
 use crate::{
-	data::{AudioFile, SystemState},
+	data::{AudioFile, Project, SystemState},
 	resources::{strings, PlayState, UiEvent},
 	windows::Window,
 };
@@ -19,20 +19,22 @@ impl Window for SamplerWindow {
 		ctx: &egui::Context,
 		name: &WindowName,
 		open: &mut bool,
-		state: &Arc<RwLock<SystemState>>,
+		state: &Arc<RwLock<Project>>,
+		system: &mut SystemState,
 		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		egui::Window::new(name.as_ref())
 			.open(open)
 			.collapsible(false)
 			.min_width(380.0)
-			.show(ctx, |ui| self.ui(ui, state, ui_events));
+			.show(ctx, |ui| self.ui(ui, state, system, ui_events));
 	}
 
 	fn ui(
 		&mut self,
 		ui: &mut egui::Ui,
-		state: &Arc<RwLock<SystemState>>,
+		state: &Arc<RwLock<Project>>,
+		_system: &mut SystemState,
 		ui_events: &mut VecDeque<UiEvent>,
 	) {
 		let state = &mut state.read().unwrap();

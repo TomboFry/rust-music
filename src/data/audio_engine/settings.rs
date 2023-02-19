@@ -2,55 +2,40 @@ use super::AudioEngineEvent;
 use cpal::traits::{DeviceTrait, HostTrait};
 use rtrb::Producer;
 
-pub struct DeviceResult {
-	pub input_default: cpal::Device,
-	pub output_default: cpal::Device,
-	pub input_list: Vec<cpal::Device>,
-	pub output_list: Vec<cpal::Device>,
-}
-
-impl DeviceResult {
-	pub fn get_devices() -> DeviceResult {
-		let host = cpal::default_host();
-		DeviceResult {
-			input_default: host.default_input_device().unwrap(),
-			input_list: host.input_devices().unwrap().collect(),
-
-			output_default: host.default_output_device().unwrap(),
-			output_list: host.output_devices().unwrap().collect(),
-		}
-	}
-}
-
 pub struct AudioSettings {
 	pub available_inputs: Vec<cpal::Device>,
 	pub available_outputs: Vec<cpal::Device>,
 	pub active_input_index: usize,
 	pub active_output_index: usize,
 	pub output_sample_rate: u32,
-	pub output_channels: u32,
 	pub output_config_range: Option<cpal::SupportedStreamConfigRange>,
 	pub upd_tx: Producer<AudioEngineEvent>,
 }
 
 impl AudioSettings {
 	pub fn new(upd_tx: Producer<AudioEngineEvent>) -> Self {
-		let devices = DeviceResult::get_devices();
+		let host = cpal::default_host();
 
-		let default_input_name = devices.input_default.name().unwrap();
-		let default_output_name = devices.output_default.name().unwrap();
+		let device_output_list = host.output_devices().unwrap().collect::<Vec<_>>();
+		let device_input_list = host.input_devices().unwrap().collect::<Vec<_>>();
+
+		let device_output_default = host.default_output_device().unwrap();
+		let device_input_default = host.default_input_device().unwrap();
+
+		let default_input_name = device_input_default.name().unwrap();
+		let default_output_name = device_output_default.name().unwrap();
+
 		let active_input_index =
-			AudioSettings::get_device_index(&devices.input_list, &default_input_name);
+			AudioSettings::get_device_index(&device_input_list, &default_input_name);
 		let active_output_index =
-			AudioSettings::get_device_index(&devices.output_list, &default_output_name);
+			AudioSettings::get_device_index(&device_output_list, &default_output_name);
 
 		let mut settings = Self {
 			active_input_index,
 			active_output_index,
-			available_inputs: devices.input_list,
-			available_outputs: devices.output_list,
+			available_inputs: device_input_list,
+			available_outputs: device_output_list,
 			output_sample_rate: 48000,
-			output_channels: 2,
 			output_config_range: None,
 			upd_tx,
 		};
@@ -103,7 +88,7 @@ impl AudioSettings {
 
 		self.output_config_range = Some(config);
 
-		let final_config = self
+		let config = self
 			.output_config_range
 			.clone()
 			.unwrap()
@@ -113,16 +98,15 @@ impl AudioSettings {
 			.push(AudioEngineEvent::Disable)
 			.expect("Queue full!");
 
-		let buffer_size = match final_config.buffer_size() {
+		let buffer_size = match config.buffer_size() {
 			cpal::SupportedBufferSize::Unknown => 960,
-			cpal::SupportedBufferSize::Range { .. } => 960,
+			cpal::SupportedBufferSize::Range { max, min } => 960.clamp(*min, *max),
 		};
 
 		self.upd_tx
 			.push(AudioEngineEvent::Enable {
 				device_index: self.active_output_index,
-				channels: self.output_channels,
-				config: final_config,
+				config,
 				buffer_size,
 			})
 			.expect("Queue full!");

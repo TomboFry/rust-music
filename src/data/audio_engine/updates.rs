@@ -4,6 +4,5 @@ pub enum AudioEngineEvent {
 		device_index: usize,
 		buffer_size: u32,
 		config: cpal::SupportedStreamConfig,
-		channels: u32,
 	},
 }

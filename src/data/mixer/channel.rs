@@ -1,5 +1,5 @@
 pub struct Channel {
-	pub volume: f32,
+	pub volume: f64,
 	pub panning: f32,
 	pub muted: bool,
 	pub name: String,
