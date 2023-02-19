@@ -2,7 +2,7 @@
 
 Yep, someone else's attempt at making a DAW in Rust.
 
-Please read the [progress](./progress/progress.md) log to see how things are
+Please read the [progress](./progress/README.md) log to see how things are
 going. There are screenshots and GIFs!
 
 ## Goals (not implemented features!)
