@@ -26,16 +26,20 @@ impl Window for MixerWindow {
 	}
 
 	fn ui(&mut self, ui: &mut egui::Ui, state: &Arc<RwLock<Project>>, system: &mut SystemState) {
-		let state = state.read().unwrap();
+		let project = state.read().unwrap();
 		egui::TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
-			if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
-				system.dispatch(UiEvent::AddChannel);
-			}
+			ui.horizontal(|ui| {
+				if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
+					system.dispatch(UiEvent::AddChannel);
+				}
+
+				ui.label(format!("{}", project.mixer.channels.len()));
+			});
 		});
 
 		egui::ScrollArea::horizontal().show(ui, |ui| {
 			ui.horizontal(|ui| {
-				state
+				project
 					.mixer
 					.channels
 					.iter()
@@ -67,14 +71,23 @@ fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mu
 	);
 
 	// Panning
-	ui.add(
-		egui_extras_xt::knobs::AudioKnob::new(&mut channel_panning)
-			.range(-1.0..=1.0)
-			.spread(0.75)
-			.drag_length(4.0)
-			.animated(false)
-			.shape(egui_extras_xt::common::WidgetShape::Circle),
-	);
+	if ui
+		.add(
+			egui_extras_xt::knobs::AudioKnob::new(&mut channel_panning)
+				.range(-1.0..=1.0)
+				.spread(0.75)
+				.drag_length(4.0)
+				.animated(false)
+				.shape(egui_extras_xt::common::WidgetShape::Circle),
+		)
+		.double_clicked()
+	{
+		// Reset pan to 0%
+		system.dispatch(UiEvent::ChannelPanning {
+			channel_index: index,
+			panning: 0.0,
+		});
+	}
 
 	let label = if channel_panning == 0.0 {
 		""
