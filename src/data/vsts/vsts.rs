@@ -1,7 +1,7 @@
 use crate::resources::strings;
-use rayon::prelude::*;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
-use vst::host::{Host, PluginInstance, PluginLoader};
+use vst::host::{Host, PluginLoader};
 use vst::plugin::Plugin;
 
 pub struct SampleHost;
@@ -14,7 +14,7 @@ impl Host for SampleHost {
 
 #[derive(Default)]
 pub struct VstSettings {
-	pub vst_list: Vec<PluginInstance>,
+	pub vst_list: Vec<(String, String)>,
 }
 
 impl VstSettings {
@@ -23,22 +23,28 @@ impl VstSettings {
 		for path in strings::VST_PATHS {
 			vst_path_list.append(&mut get_files_recursively(path));
 		}
-		let host = Arc::new(Mutex::new(SampleHost));
+
 		self.vst_list = vst_path_list
-			.par_iter()
+			.iter()
 			.filter_map(|entry| {
-				let path = entry.path();
-				let path = path.as_path();
-				println!("Loading {:?}", path);
+				// Give every plugin its own host?
+				let host = Arc::new(Mutex::new(SampleHost));
+				let path_str = entry.path();
+				let path_str = path_str.as_os_str().to_str().unwrap();
+				let path = Path::new(&path_str);
+
+				println!("\nLoading {:?}", path);
 				let loader = PluginLoader::load(path, host.clone());
 				if let Err(err) = loader {
-					println!("{err:?} - {path:?} ");
+					println!("{err:?} - {path:?}");
 					return None;
 				}
+
 				let mut instance = loader.unwrap().instance().unwrap();
+				instance.stop_process();
 				instance.suspend();
 
-				Some(instance)
+				Some((instance.get_info().name, path_str.to_owned()))
 			})
 			.collect();
 	}

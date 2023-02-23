@@ -7,6 +7,20 @@ use std::sync::RwLockReadGuard;
 
 pub struct Mixer {
 	pub channels: Vec<Channel>,
+	pub selected_channel: Option<usize>,
+}
+
+impl Default for Mixer {
+	fn default() -> Self {
+		Self {
+			channels: vec![
+				Channel::new("Master"),
+				Channel::new("Channel 1"),
+				Channel::new("Channel 2"),
+			],
+			selected_channel: None,
+		}
+	}
 }
 
 impl Mixer {
@@ -41,17 +55,5 @@ impl Mixer {
 		});
 
 		mix
-	}
-}
-
-impl Default for Mixer {
-	fn default() -> Self {
-		Self {
-			channels: vec![
-				Channel::new("Master"),
-				Channel::new("Channel 1"),
-				Channel::new("Channel 2"),
-			],
-		}
 	}
 }

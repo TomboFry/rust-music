@@ -3,7 +3,6 @@ use crate::{data::SystemState, resources::strings};
 use cpal::traits::DeviceTrait;
 use std::sync::{Arc, RwLock};
 use strum::{AsRefStr, Display, EnumIter};
-use vst::prelude::Plugin;
 
 #[derive(AsRefStr, Display, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter)]
 pub enum SettingsTab {
@@ -72,14 +71,15 @@ impl Window for SettingsWindow {
 }
 
 fn tab_ui_vsts(ui: &mut egui::Ui, _state: &Arc<RwLock<Project>>, system: &mut SystemState) {
-	if ui.button("Reload VSTs").clicked() {
+	if ui.button(strings::SETTINGS_VST_RELOAD).clicked() {
 		system.vsts.reload_vsts();
 	}
-
-	for vst in &system.vsts.vst_list {
-		let info = vst.get_info();
-		ui.label(format!("{} (by {})", info.name, info.vendor));
-	}
+	egui::ScrollArea::vertical().show(ui, |ui| {
+		for vst in &system.vsts.vst_list {
+			let (name, path) = vst;
+			ui.label(format!("{} ({})", name, path));
+		}
+	});
 }
 
 fn tab_ui_audio(ui: &mut egui::Ui, _state: &Arc<RwLock<Project>>, system: &mut SystemState) {

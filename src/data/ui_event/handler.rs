@@ -55,6 +55,9 @@ pub fn ui_event_handler(state: &mut Arc<RwLock<Project>>, events: &mut VecDeque<
 				channel_index,
 				name,
 			} => state.mixer.channels[channel_index].name = name,
+			UiEvent::SelectChannel { channel_index } => {
+				state.mixer.selected_channel = channel_index
+			}
 
 			// Sampler
 			// UiEvent::AddSample { path } => {}

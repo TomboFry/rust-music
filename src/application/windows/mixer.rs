@@ -4,6 +4,7 @@ use crate::{
 	resources::strings,
 };
 use std::sync::{Arc, RwLock};
+use vst::prelude::*;
 
 #[derive(Default)]
 pub struct MixerWindow {}
@@ -22,6 +23,7 @@ impl Window for MixerWindow {
 			.resizable(true)
 			.collapsible(false)
 			.default_width(640.0)
+			.default_height(256.0)
 			.show(ctx, |ui| self.ui(ui, state, system));
 	}
 
@@ -36,6 +38,31 @@ impl Window for MixerWindow {
 				ui.label(format!("{}", project.mixer.channels.len()));
 			});
 		});
+
+		egui::SidePanel::right("mixer_effects")
+			.min_width(160.0)
+			.resizable(false)
+			.show_inside(ui, |ui| {
+				if let None = project.mixer.selected_channel {
+					return;
+				}
+				let selected_channel_index = project.mixer.selected_channel.unwrap();
+				let channel = &project.mixer.channels[selected_channel_index];
+
+				ui.scope(|ui| {
+					let label = egui::Label::new(&channel.name);
+					ui.add(label);
+				});
+
+				// For now, only list effect names
+				for effect in &channel.effects {
+					ui.label(format!(
+						"{} (by {}",
+						effect.get_info().name,
+						effect.get_info().vendor
+					));
+				}
+			});
 
 		egui::ScrollArea::horizontal().show(ui, |ui| {
 			ui.horizontal(|ui| {
@@ -62,6 +89,11 @@ fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mu
 	let mut channel_panning = channel.panning;
 	let mut channel_volume = channel.volume;
 	let mut channel_muted = channel.muted;
+	let mut channel_selected = false;
+
+	if ui.button("Select").clicked() {
+		channel_selected = true;
+	}
 
 	ui.add(
 		egui::TextEdit::singleline(&mut channel_name)
@@ -151,12 +183,18 @@ fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mu
 			muted: channel_muted,
 		});
 	}
+
+	if channel_selected {
+		system.dispatch(UiEvent::SelectChannel {
+			channel_index: Some(index),
+		})
+	}
 }
 
 fn view(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mut SystemState) {
 	ui.group(|ui| {
 		ui.allocate_ui_with_layout(
-			egui::Vec2::new(64.0, 256.0),
+			egui::vec2(64.0, 256.0),
 			egui::Layout::top_down_justified(egui::Align::Center),
 			|ui| view_contents(ui, channel, index, system),
 		);

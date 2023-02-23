@@ -33,6 +33,9 @@ pub enum UiEvent {
 		channel_index: usize,
 		muted: bool,
 	},
+	SelectChannel {
+		channel_index: Option<usize>,
+	},
 
 	// Sampler
 	AddSample {

@@ -9,6 +9,7 @@ pub struct Channel {
 	pub panning: f32,
 	pub muted: bool,
 	pub name: String,
+	pub effects: Vec<vst::host::PluginInstance>,
 }
 
 impl Channel {
@@ -18,6 +19,7 @@ impl Channel {
 			panning: 0.0,
 			muted: false,
 			name: name.to_owned(),
+			effects: Vec::with_capacity(10),
 		}
 	}
 
