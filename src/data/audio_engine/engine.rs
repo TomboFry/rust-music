@@ -5,7 +5,7 @@ use rtrb::Consumer;
 use std::{
 	sync::{Arc, RwLock},
 	thread::{self, JoinHandle},
-	time::{Duration, Instant},
+	time::Duration,
 };
 
 #[derive(Copy, Clone)]
@@ -14,7 +14,7 @@ pub struct EngineConfig {
 	pub channels: usize,
 	pub timer: f64,
 	pub real_buffer_size: Option<usize>,
-	pub buffer_start: Instant,
+	pub buffer_start: Option<cpal::StreamInstant>,
 }
 
 pub struct AudioEngine {
@@ -98,7 +98,7 @@ impl AudioEngine {
 			channels: config.channels() as usize,
 			timer: 0.0,
 			real_buffer_size: None,
-			buffer_start: Instant::now(),
+			buffer_start: None,
 		};
 
 		let err_fn = move |err| eprintln!("{err}");
@@ -127,7 +127,7 @@ impl AudioEngine {
 		project: &Arc<RwLock<Project>>,
 		config: &mut EngineConfig,
 	) {
-		config.buffer_start = Instant::now();
+		config.buffer_start = Some(info.timestamp().playback);
 		let project = project.read().unwrap();
 
 		// config.sample_rate = data.len() as f64 * 50.0;

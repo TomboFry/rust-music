@@ -1,7 +1,4 @@
-use crate::{
-	data::{EngineConfig, Project},
-	utilities::format::duration_since_play_state,
-};
+use crate::data::{EngineConfig, Project};
 use std::sync::RwLockReadGuard;
 
 pub struct Channel {
@@ -25,23 +22,19 @@ impl Channel {
 
 	pub fn render_buffer(
 		&self,
-		project: &RwLockReadGuard<Project>,
+		_project: &RwLockReadGuard<Project>,
 		buffer_size: usize,
 		_info: &cpal::OutputCallbackInfo,
 		config: &EngineConfig,
 	) -> Vec<f64> {
 		let mut buffer: Vec<f64> = vec![0.0; buffer_size];
 
-		// Theoretically, the milliseconds since playing started.
-		// Realistically, there is random fluctuation in time
-		let mut timer = duration_since_play_state(&project.play_state, Some(config.buffer_start))
-			.as_nanos() as f64
-			/ 1_000_000.0;
-
 		// Save some processing power!
 		if self.muted {
 			return buffer;
 		}
+
+		let mut timer = 0.0;
 
 		// `sample` contains left and right f64 values
 		for sample in buffer.chunks_exact_mut(2) {
