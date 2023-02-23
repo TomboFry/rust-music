@@ -11,6 +11,8 @@ pub const PROJECT_TIME_SIGNATURE: &'static str = "Time Signature";
 
 pub const CHANNEL_DEFAULT_NAME: &'static str = "Channel";
 pub const MIXER_NEW_CHANNEL: &'static str = "Add New Channel";
+pub const MIXER_ADD_EFFECT: &'static str = "Add Effect";
+pub const MIXER_ADD_EFFECT_WINDOW_TITLE: &'static str = "Add Effect to ";
 
 pub const SETTINGS_OUTPUT_DEVICE: &'static str = "Output Device";
 pub const SETTINGS_INPUT_DEVICE: &'static str = "Input Device";

@@ -76,8 +76,7 @@ fn tab_ui_vsts(ui: &mut egui::Ui, _state: &Arc<RwLock<Project>>, system: &mut Sy
 	}
 	egui::ScrollArea::vertical().show(ui, |ui| {
 		for vst in &system.vsts.vst_list {
-			let (name, path) = vst;
-			ui.label(format!("{} ({})", name, path));
+			ui.label(format!("{} ({})", vst.name, vst.path));
 		}
 	});
 }

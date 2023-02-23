@@ -1,7 +1,8 @@
 use super::UiEvent;
-use crate::data::Project;
+use crate::data::{Project, VstSettings};
 use std::{
 	collections::VecDeque,
+	path::PathBuf,
 	sync::{Arc, RwLock},
 };
 
@@ -57,6 +58,13 @@ pub fn ui_event_handler(state: &mut Arc<RwLock<Project>>, events: &mut VecDeque<
 			} => state.mixer.channels[channel_index].name = name,
 			UiEvent::ChannelSelect { channel_index } => {
 				state.mixer.selected_channel = channel_index
+			}
+			UiEvent::ChannelEffectAdd {
+				channel_index,
+				vst_path,
+			} => {
+				let instance = VstSettings::load_vst(&PathBuf::from(&vst_path)).unwrap();
+				state.mixer.channels[channel_index].effects.push(instance);
 			}
 
 			// Sampler

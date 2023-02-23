@@ -1,7 +1,7 @@
 use crate::resources::strings;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use vst::host::{Host, PluginLoader};
+use vst::host::{Host, PluginInstance, PluginLoadError, PluginLoader};
 use vst::plugin::Plugin;
 
 pub struct SampleHost;
@@ -12,9 +12,15 @@ impl Host for SampleHost {
 	}
 }
 
+pub struct VstBasicInfo {
+	pub name: String,
+	pub path: String,
+	pub category: vst::plugin::Category,
+}
+
 #[derive(Default)]
 pub struct VstSettings {
-	pub vst_list: Vec<(String, String)>,
+	pub vst_list: Vec<VstBasicInfo>,
 }
 
 impl VstSettings {
@@ -27,26 +33,43 @@ impl VstSettings {
 		self.vst_list = vst_path_list
 			.iter()
 			.filter_map(|entry| {
-				// Give every plugin its own host?
-				let host = Arc::new(Mutex::new(SampleHost));
 				let path_str = entry.path();
 				let path_str = path_str.as_os_str().to_str().unwrap();
-				let path = Path::new(&path_str);
 
-				println!("\nLoading {:?}", path);
-				let loader = PluginLoader::load(path, host.clone());
-				if let Err(err) = loader {
-					println!("{err:?} - {path:?}");
+				let instance = VstSettings::load_vst(&entry.path());
+				if instance.is_err() {
 					return None;
 				}
+				let mut instance = instance.unwrap();
 
-				let mut instance = loader.unwrap().instance().unwrap();
 				instance.stop_process();
 				instance.suspend();
+				let info = instance.get_info();
 
-				Some((instance.get_info().name, path_str.to_owned()))
+				println!("{:?}", instance.get_info().category);
+
+				Some(VstBasicInfo {
+					name: info.name,
+					path: path_str.to_string(),
+					category: info.category,
+				})
 			})
 			.collect();
+	}
+
+	pub fn load_vst(entry: &PathBuf) -> Result<PluginInstance, PluginLoadError> {
+		// Give every plugin its own host?
+		let host = Arc::new(Mutex::new(SampleHost));
+		let path = Path::new(&entry);
+
+		println!("\nLoading {:?}", path);
+		let loader = PluginLoader::load(path, host.clone());
+		if let Err(err) = loader {
+			println!("{err:?} - {path:?}");
+			return Err(err);
+		}
+
+		loader.unwrap().instance()
 	}
 }
 

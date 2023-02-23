@@ -36,6 +36,10 @@ pub enum UiEvent {
 	ChannelSelect {
 		channel_index: Option<usize>,
 	},
+	ChannelEffectAdd {
+		channel_index: usize,
+		vst_path: String,
+	},
 
 	// Sampler
 	AddSample {

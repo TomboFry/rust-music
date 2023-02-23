@@ -7,7 +7,12 @@ use std::sync::{Arc, RwLock};
 use vst::prelude::*;
 
 #[derive(Default)]
-pub struct MixerWindow {}
+pub struct MixerWindow {
+	effect_add_show_window: bool,
+
+	// TODO: Keep LIST of opened effect param windows
+	effect_show_params: Option<usize>,
+}
 
 impl Window for MixerWindow {
 	fn show(
@@ -44,20 +49,27 @@ impl Window for MixerWindow {
 			.resizable(false)
 			.show_inside(ui, |ui| {
 				if let None = project.mixer.selected_channel {
+					// Always hide the window if there isn't a selected channel
+					if self.effect_add_show_window == true {
+						self.effect_add_show_window = false;
+					}
+
 					return;
 				}
+
 				let selected_channel_index = project.mixer.selected_channel.unwrap();
 				let channel = &project.mixer.channels[selected_channel_index];
 
-				ui.scope(|ui| {
-					let label = egui::Label::new(&channel.name);
-					ui.add(label);
-				});
+				ui.label(&channel.name);
+
+				if ui.button(strings::MIXER_ADD_EFFECT).clicked() {
+					self.effect_add_show_window = true;
+				}
 
 				// For now, only list effect names
 				for effect in &channel.effects {
-					ui.label(format!(
-						"{} (by {}",
+					ui.small(format!(
+						"{} (by {})",
 						effect.get_info().name,
 						effect.get_info().vendor
 					));
@@ -71,9 +83,25 @@ impl Window for MixerWindow {
 					.channels
 					.iter()
 					.enumerate()
-					.for_each(|(idx, c)| view(ui, c, idx, system));
+					.for_each(|(idx, c)| view_channel_ui(ui, c, idx, system));
 			});
 		});
+
+		if let Some(selected_channel) = project.mixer.selected_channel {
+			let channel_name = &project.mixer.channels[selected_channel].name;
+
+			view_add_effect_dialog_ui(
+				ui,
+				&mut self.effect_add_show_window,
+				selected_channel,
+				channel_name,
+				system,
+			);
+		}
+
+		// if let Some(effect_index) = self.effect_show_params {
+
+		// }
 	}
 
 	fn toggle_shortcut(&self) -> Option<egui::KeyboardShortcut> {
@@ -84,7 +112,74 @@ impl Window for MixerWindow {
 	}
 }
 
-fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mut SystemState) {
+fn view_add_effect_dialog_ui(
+	ui: &mut egui::Ui,
+	show_window: &mut bool,
+	selected_channel: usize,
+	channel_name: &str,
+	system: &mut SystemState,
+) {
+	// Keep track of closed window because we can't set
+	// self.effect_add_show_window while mutably borrowing it
+	let mut close_window = false;
+
+	egui::Window::new(format!(
+		"{} {}",
+		strings::MIXER_ADD_EFFECT_WINDOW_TITLE,
+		channel_name
+	))
+	.id(egui::Id::new("mixer_add_effect_dialog"))
+	.open(show_window)
+	.show(ui.ctx(), |ui| {
+		ui.horizontal_wrapped(|ui| {
+			let mut vst_selected = None;
+			for vst in &system.vsts.vst_list {
+				let can_list_effect = match vst.category {
+					Category::Effect => true,
+					_ => false,
+				};
+
+				if !can_list_effect {
+					continue;
+				}
+
+				if ui.button(&vst.name).clicked() {
+					vst_selected = Some(UiEvent::ChannelEffectAdd {
+						channel_index: selected_channel,
+						vst_path: vst.path.to_string(),
+					});
+
+					close_window = true;
+				}
+			}
+
+			if let Some(vst) = vst_selected {
+				system.dispatch(vst);
+			}
+		});
+	});
+
+	if close_window {
+		*show_window = false;
+	}
+}
+
+fn view_channel_ui(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mut SystemState) {
+	ui.group(|ui| {
+		ui.allocate_ui_with_layout(
+			egui::vec2(64.0, 256.0),
+			egui::Layout::top_down_justified(egui::Align::Center),
+			|ui| view_channel_contents(ui, channel, index, system),
+		);
+	});
+}
+
+fn view_channel_contents(
+	ui: &mut egui::Ui,
+	channel: &Channel,
+	index: usize,
+	system: &mut SystemState,
+) {
 	let mut channel_name = channel.name.clone();
 	let mut channel_panning = channel.panning;
 	let mut channel_volume = channel.volume;
@@ -189,14 +284,4 @@ fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mu
 			channel_index: Some(index),
 		})
 	}
-}
-
-fn view(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mut SystemState) {
-	ui.group(|ui| {
-		ui.allocate_ui_with_layout(
-			egui::vec2(64.0, 256.0),
-			egui::Layout::top_down_justified(egui::Align::Center),
-			|ui| view_contents(ui, channel, index, system),
-		);
-	});
 }
