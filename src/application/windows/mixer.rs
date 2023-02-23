@@ -32,7 +32,7 @@ impl Window for MixerWindow {
 		egui::TopBottomPanel::top("mixer_menu").show_inside(ui, |ui| {
 			ui.horizontal(|ui| {
 				if ui.button(strings::MIXER_NEW_CHANNEL).clicked() {
-					system.dispatch(UiEvent::AddChannel);
+					system.dispatch(UiEvent::ChannelAdd);
 				}
 
 				ui.label(format!("{}", project.mixer.channels.len()));
@@ -150,7 +150,7 @@ fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mu
 	// First index is the master channel - let's not remove that!
 	if index > 0 {
 		if ui.button("❌").clicked() {
-			system.dispatch(UiEvent::RemoveChannel {
+			system.dispatch(UiEvent::ChannelRemove {
 				channel_index: index,
 			});
 		}
@@ -185,7 +185,7 @@ fn view_contents(ui: &mut egui::Ui, channel: &Channel, index: usize, system: &mu
 	}
 
 	if channel_selected {
-		system.dispatch(UiEvent::SelectChannel {
+		system.dispatch(UiEvent::ChannelSelect {
 			channel_index: Some(index),
 		})
 	}

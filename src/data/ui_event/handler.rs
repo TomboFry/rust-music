@@ -33,10 +33,10 @@ pub fn ui_event_handler(state: &mut Arc<RwLock<Project>>, events: &mut VecDeque<
 			}
 
 			// Mixer
-			UiEvent::AddChannel => {
+			UiEvent::ChannelAdd => {
 				state.mixer.add_channel();
 			}
-			UiEvent::RemoveChannel { channel_index } => {
+			UiEvent::ChannelRemove { channel_index } => {
 				state.mixer.channels.remove(channel_index);
 			}
 			UiEvent::ChannelPanning {
@@ -55,7 +55,7 @@ pub fn ui_event_handler(state: &mut Arc<RwLock<Project>>, events: &mut VecDeque<
 				channel_index,
 				name,
 			} => state.mixer.channels[channel_index].name = name,
-			UiEvent::SelectChannel { channel_index } => {
+			UiEvent::ChannelSelect { channel_index } => {
 				state.mixer.selected_channel = channel_index
 			}
 

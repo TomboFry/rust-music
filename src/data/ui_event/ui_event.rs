@@ -13,8 +13,8 @@ pub enum UiEvent {
 	ProjectSongPosition(Duration),
 
 	// Mixer
-	AddChannel,
-	RemoveChannel {
+	ChannelAdd,
+	ChannelRemove {
 		channel_index: usize,
 	},
 	ChannelVolume {
@@ -33,7 +33,7 @@ pub enum UiEvent {
 		channel_index: usize,
 		muted: bool,
 	},
-	SelectChannel {
+	ChannelSelect {
 		channel_index: Option<usize>,
 	},
 

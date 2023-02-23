@@ -137,7 +137,7 @@ fn add_button(ui: &mut Ui, system: &mut SystemState) {
 		ui.style_mut().wrap = Some(false);
 
 		if ui.add(egui::Button::new("Channel")).clicked() {
-			system.dispatch(UiEvent::AddChannel);
+			system.dispatch(UiEvent::ChannelAdd);
 			ui.close_menu();
 		}
 
