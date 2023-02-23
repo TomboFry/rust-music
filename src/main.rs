@@ -10,8 +10,8 @@ mod utilities;
 
 pub fn main() -> Result<(), eframe::Error> {
 	let options = eframe::NativeOptions {
-		min_window_size: Some(egui::vec2(640.0, 480.0)),
-		initial_window_size: Some(egui::vec2(1280.0, 720.0)),
+		min_window_size: Some(egui::vec2(1280.0, 720.0)),
+		initial_window_size: Some(egui::vec2(1600.0, 900.0)),
 		centered: true,
 		..Default::default()
 	};
