@@ -1,5 +1,47 @@
 # Development Progress
 
+## 2023-02-23 - VST Effects in the Mixer
+
+![2023-02-23 Screenshot](./2023-02-23.png)
+
+In order to start using VSTs and processing sound through them, I thought it
+would be useful to add all the GUI elements in order to load VSTs from file,
+associate them with specific channels, and display them accordingly.
+
+Firstly, I separated the Settings screen into multiple tabs. The first tab shows
+audio input/output settings as it always has (see 2023-02-11's screenshot for
+reference), the "VSTs" tab shows a "Rescan VSTs" button which will loop through
+known directories to contain VST plugins, and a list of plugins which loaded
+successfully (which means it's a 64-bit plugin, first and foremost, and didn't
+have any startup issues, which is also a possibility). Right now it's very
+basic, showing only the plugin name and their path, but I would like to create a
+more formal UI which allows you to enable and disable individual plugins'
+visibility elsewhere across the application (ie. in the "Add Effect" window,
+which we'll get to later).
+
+Second, a "Select" button has been added to the top of each mixer Channel. Once
+a channel is selected a side panel is shown, which lists all the effects added
+to that channel. It can be added to with an "Add Effects" button, which'll pop
+open another window with a list of effects. When any button is selected, the
+window closes, the VST is loaded into memory, and is displayed in the side
+panel.
+
+Do note that in the list of VSTs on the right, "Dexed" appears, which is a
+`Synth` VST, whereas it does not appear in the new window. That's because
+"synths" will eventually be routed through mixer channels _before_ the effects
+chain - this is similar to FL Studio, where any instrument can be associated
+with any channel. I'm not sure if I want to allow multiple instruments to be
+associated with the same mixer channel yet, depending on the data structure, and
+how the audio processing will end up working.
+
+The basic functionality is down, and in the future the GUI will be cleaned up
+dramatically. For example, selecting a channel should just require you to click
+the channel, rather than a specific "Select" button. There should be a more
+obvious way to highlight the fact that it's selected, either with a different
+coloured border, or another indication. However, that's all going to happen
+further down the line. I am victim to polish UI too soon, and am trying to learn
+from my mistakes!
+
 ## 2023-02-18 - GUI Events and State Restructure
 
 As previously mentioned below, I have implemented a `UIEvent` queue, which
@@ -96,7 +138,7 @@ how!
 
 ## 2023-02-11 - GUI Polish (Already?!)
 
-![](./2023-02-11.png)
+![2023-02-11 Screenshot](./2023-02-11.png)
 
 Today, I worked on cleaning up the UI a little - mostly non visual, although I
 did include [egui_extras_xt](https://github.com/xTibor/egui_extras_xt) for the
@@ -110,7 +152,7 @@ using the Settings window.
 
 ## 2023-02-10 - Basic GUI Set Up!
 
-![](./2023-02-10.gif)
+![2023-02-10 Animated GIF](./2023-02-10.gif)
 
 Set up a project with egui and followed several examples to create a basic
 windowing system with a mixer view. The mixer view contains audio channels with

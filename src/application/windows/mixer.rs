@@ -124,7 +124,7 @@ fn view_add_effect_dialog_ui(
 	let mut close_window = false;
 
 	egui::Window::new(format!(
-		"{} {}",
+		"{}{}",
 		strings::MIXER_ADD_EFFECT_WINDOW_TITLE,
 		channel_name
 	))
