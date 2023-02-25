@@ -133,13 +133,6 @@ impl AudioEngine {
 			config.real_buffer_size = Some(data.len());
 		}
 
-		let mix =
-			project
-				.mixer
-				.render_buffer(&project, config.real_buffer_size.unwrap(), info, config);
-
-		for (index, sample) in data.iter_mut().enumerate() {
-			*sample = T::from_sample(mix[index]);
-		}
+		project.mixer.render_buffer(data, &project, info, config);
 	}
 }

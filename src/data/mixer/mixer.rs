@@ -32,28 +32,28 @@ impl Mixer {
 		self.channels.push(channel);
 	}
 
-	pub fn render_buffer(
+	pub fn render_buffer<T: cpal::Sample + cpal::FromSample<f64> + std::ops::Add<Output = T>>(
 		&self,
+		data: &mut [T],
 		project: &RwLockReadGuard<Project>,
-		buffer_size: usize,
 		info: &cpal::OutputCallbackInfo,
 		config: &mut EngineConfig,
-	) -> Vec<f64> {
+	) {
 		let mixes = self
 			.channels
 			.iter()
-			.map(|c| c.render_buffer(project, buffer_size, info, config))
+			.map(|c| c.render_buffer(project, data.len(), info, config))
 			.collect::<Vec<_>>();
 
+		// Clear buffer first
+		data.fill(T::from_sample(0.0));
+
 		// Mix all channels together
-		// TODO: There must be a faster way
-		let mut mix = vec![0.0; buffer_size];
+		// let mut mix = vec![0.0; buffer_size];
 		mixes.iter().for_each(|c| {
 			c.iter().enumerate().for_each(|(index, sample)| {
-				mix[index] = *sample + mix[index];
-			})
+				data[index] = T::from_sample(*sample) + data[index];
+			});
 		});
-
-		mix
 	}
 }
