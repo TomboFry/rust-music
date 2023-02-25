@@ -124,10 +124,14 @@ fn tab_ui_audio(ui: &mut egui::Ui, _state: &Arc<RwLock<Project>>, system: &mut S
 	});
 
 	if sample_rate != system.audio.output_sample_rate {
-		system.audio.update_output_config(output_index);
+		if let Err(_) = system.audio.update_output_config(output_index) {
+			// TODO: Show toast
+		}
 	}
 
 	if output_index != system.audio.active_output_index {
-		system.audio.update_output_config(output_index);
+		if let Err(_) = system.audio.update_output_config(output_index) {
+			// TODO: Show toast
+		}
 	}
 }

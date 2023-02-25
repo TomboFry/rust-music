@@ -12,7 +12,7 @@ pub struct SystemState {
 impl SystemState {
 	pub fn new(audio_update_tx: Producer<AudioEngineEvent>) -> Self {
 		Self {
-			audio: AudioSettings::new(audio_update_tx),
+			audio: AudioSettings::new(audio_update_tx).unwrap(),
 			vsts: VstSettings::default(),
 			ui_events: VecDeque::with_capacity(2),
 		}

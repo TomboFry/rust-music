@@ -120,7 +120,6 @@ impl AudioEngine {
 	}
 
 	/// Process all synths, effects, and mixer channels.
-	/// TODO: Implement! Get audio based on project play state (eg. "Playing", "Stopped", etc).
 	fn process_audio<T: cpal::Sample + cpal::FromSample<f64> + std::ops::Add<Output = T>>(
 		data: &mut [T],
 		info: &cpal::OutputCallbackInfo,
@@ -130,7 +129,6 @@ impl AudioEngine {
 		config.buffer_start = Some(info.timestamp().playback);
 		let project = project.read().unwrap();
 
-		// config.sample_rate = data.len() as f64 * 50.0;
 		if config.real_buffer_size.is_none() {
 			config.real_buffer_size = Some(data.len());
 		}

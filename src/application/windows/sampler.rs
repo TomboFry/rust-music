@@ -4,6 +4,7 @@ use crate::{
 	resources::{strings, PlayState},
 };
 use std::{
+	path::{Path, PathBuf},
 	sync::{Arc, RwLock},
 	time::Instant,
 };
@@ -63,8 +64,7 @@ fn ui_sample(
 	ui: &mut egui::Ui,
 	system: &mut SystemState,
 ) {
-	let file_name = file.path.file_name().unwrap().to_str().unwrap();
-	let full_path = file.path.as_os_str().to_str().unwrap();
+	let file_name = Path::new(&file.path).file_name().unwrap().to_str().unwrap();
 
 	let mut file_channel = file.channel;
 	let mut file_play_state = file.play_state;
@@ -94,7 +94,7 @@ fn ui_sample(
 		});
 	}
 
-	ui.label(file_name).on_hover_text(full_path);
+	ui.label(file_name).on_hover_text(&file.path);
 
 	if file_channel != file.channel {
 		system.dispatch(UiEvent::SampleChannel {

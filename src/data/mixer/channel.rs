@@ -44,7 +44,7 @@ impl Channel {
 			let pan_left = ((self.panning as f64 * -1.0) + 1.0).clamp(0.0, 1.0);
 			let pan_right = (self.panning as f64 + 1.0).clamp(0.0, 1.0);
 
-			let val = rand::random::<f64>();
+			let val = (rand::random::<f64>() * 2.0) - 1.0;
 
 			timer = (timer + 1.0) % config.sample_rate;
 

@@ -1,4 +1,5 @@
 use super::AudioEngineEvent;
+use anyhow::Result;
 use cpal::traits::{DeviceTrait, HostTrait};
 use rtrb::Producer;
 
@@ -13,17 +14,17 @@ pub struct AudioSettings {
 }
 
 impl AudioSettings {
-	pub fn new(upd_tx: Producer<AudioEngineEvent>) -> Self {
+	pub fn new(upd_tx: Producer<AudioEngineEvent>) -> Result<Self> {
 		let host = cpal::default_host();
 
-		let device_output_list = host.output_devices().unwrap().collect::<Vec<_>>();
-		let device_input_list = host.input_devices().unwrap().collect::<Vec<_>>();
+		let device_output_list = host.output_devices()?.collect::<Vec<_>>();
+		let device_input_list = host.input_devices()?.collect::<Vec<_>>();
 
 		let device_output_default = host.default_output_device().unwrap();
 		let device_input_default = host.default_input_device().unwrap();
 
-		let default_input_name = device_input_default.name().unwrap();
-		let default_output_name = device_output_default.name().unwrap();
+		let default_input_name = device_input_default.name()?;
+		let default_output_name = device_output_default.name()?;
 
 		let active_input_index =
 			AudioSettings::get_device_index(&device_input_list, &default_input_name);
@@ -40,10 +41,10 @@ impl AudioSettings {
 			upd_tx,
 		};
 
-		settings.update_output_config(active_output_index);
+		settings.update_output_config(active_output_index)?;
 		// settings.update_input_config();
 
-		settings
+		Ok(settings)
 	}
 }
 
@@ -72,43 +73,35 @@ impl AudioSettings {
 			.unwrap()
 	}
 
-	pub fn update_output_config(&mut self, device_index: usize) {
+	pub fn update_output_config(&mut self, device_index: usize) -> Result<()> {
 		self.active_output_index = device_index;
 
-		// TODO: Better error handling
-		let config = self.available_outputs[self.active_output_index]
-			.supported_output_configs()
-			.unwrap()
+		let supported_config = self.available_outputs[self.active_output_index]
+			.supported_output_configs()?
 			.next()
 			.unwrap();
 
-		self.output_sample_rate = self
-			.output_sample_rate
-			.clamp(config.min_sample_rate().0, config.max_sample_rate().0);
+		self.output_sample_rate = self.output_sample_rate.clamp(
+			supported_config.min_sample_rate().0,
+			supported_config.max_sample_rate().0,
+		);
 
-		self.output_config_range = Some(config);
+		self.output_config_range = Some(supported_config.clone());
+		let config = supported_config.with_sample_rate(cpal::SampleRate(self.output_sample_rate));
 
-		let config = self
-			.output_config_range
-			.clone()
-			.unwrap()
-			.with_sample_rate(cpal::SampleRate(self.output_sample_rate));
-
-		self.upd_tx
-			.push(AudioEngineEvent::Disable)
-			.expect("Queue full!");
+		self.upd_tx.push(AudioEngineEvent::Disable)?;
 
 		let buffer_size = match config.buffer_size() {
 			cpal::SupportedBufferSize::Unknown => 960,
 			cpal::SupportedBufferSize::Range { max, min } => 960.clamp(*min, *max),
 		};
 
-		self.upd_tx
-			.push(AudioEngineEvent::Enable {
-				device_index: self.active_output_index,
-				config,
-				buffer_size,
-			})
-			.expect("Queue full!");
+		self.upd_tx.push(AudioEngineEvent::Enable {
+			device_index: self.active_output_index,
+			config,
+			buffer_size,
+		})?;
+
+		Ok(())
 	}
 }
